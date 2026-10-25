@@ -1,0 +1,252 @@
+:host {
+  display: block;
+  color: #2f3236;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+.lab {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 1.75rem 1.5rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+
+    h1 {
+      margin: 0;
+      font-size: 1.45rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+  }
+
+  &__subtitle {
+    margin: 0.25rem 0 0;
+    font-size: 0.88rem;
+    color: #70767e;
+  }
+
+  &__back {
+    display: inline-block;
+    margin-bottom: 0.35rem;
+    font-size: 0.82rem;
+    color: #80858d;
+    text-decoration: none;
+
+    &:hover {
+      color: #2f3236;
+    }
+  }
+
+  &__status {
+    padding: 0.35rem 0.8rem;
+    border-radius: 999px;
+    border: 1px solid #d8dbe0;
+    background: rgba(255, 255, 255, 0.72);
+    font-size: 0.82rem;
+    color: #5a6068;
+    white-space: nowrap;
+
+    &--moving {
+      border-color: #b9bec6;
+      color: #2f3236;
+    }
+  }
+}
+
+/* Soft grey-to-white gradient lives in CSS; the canvas on top is transparent. */
+.stage {
+  position: relative;
+  width: 100%;
+  height: clamp(360px, 52vh, 560px);
+  border-radius: 14px;
+  border: 1px solid #e2e4e8;
+  overflow: hidden;
+  background: linear-gradient(180deg, #d7dade 0%, #eef0f2 46%, #fdfdfd 100%);
+  box-shadow: 0 10px 30px rgba(47, 50, 54, 0.07);
+
+  ::ng-deep canvas.lab-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: manipulation;
+  }
+
+  &__fallback {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-align: center;
+    padding: 2rem;
+
+    h2 {
+      margin: 0;
+      font-size: 1.1rem;
+    }
+
+    p {
+      margin: 0;
+      max-width: 36ch;
+      color: #6b7079;
+      font-size: 0.9rem;
+    }
+  }
+}
+
+.markers {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  &__label {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #80858d;
+  }
+
+  &__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  &__button {
+    min-width: 2.25rem;
+    padding: 0.4rem 0.55rem;
+    border-radius: 8px;
+    border: 1px solid #d8dbe0;
+    background: #fff;
+    color: #4a4f57;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+
+    &:hover {
+      border-color: #a8adb4;
+    }
+
+    &--current {
+      border-color: #2f3236;
+      color: #2f3236;
+      font-weight: 600;
+    }
+
+    &--target {
+      background: #2f3236;
+      border-color: #2f3236;
+      color: #fff;
+    }
+  }
+
+  &__hint {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #80858d;
+  }
+}
+
+.panels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.panel {
+  border: 1px solid #e2e4e8;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.82);
+  padding: 1rem 1.1rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+
+  h2 {
+    margin: 0 0 0.2rem;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #80858d;
+    font-weight: 600;
+  }
+
+  &__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+}
+
+.btn {
+  padding: 0.45rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid #d8dbe0;
+  background: #fff;
+  color: #3a3f46;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    border-color: #a8adb4;
+  }
+
+  &--primary {
+    background: #2f3236;
+    border-color: #2f3236;
+    color: #fff;
+  }
+
+  &--chip {
+    font-size: 0.82rem;
+    padding: 0.35rem 0.7rem;
+  }
+
+  &--active {
+    border-color: #2f3236;
+    font-weight: 600;
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+
+  &__label {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    color: #4a4f57;
+
+    em {
+      font-style: normal;
+      color: #80858d;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  input[type='range'] {
+    width: 100%;
+    accent-color: #2f3236;
+  }
+
+  &--inline {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+    color: #4a4f57;
+  }
+}

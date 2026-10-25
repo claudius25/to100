@@ -1,0 +1,113 @@
+<section class="lab">
+  <header class="lab__header">
+    <div>
+      <a class="lab__back" routerLink="/">← Life Line</a>
+      <h1>Life Line — Character Lab</h1>
+      <p class="lab__subtitle">Procedural walker prototype · straight line, orthographic side view</p>
+    </div>
+    <span class="lab__status" [class.lab__status--moving]="status().moving">{{ statusLabel() }}</span>
+  </header>
+
+  <div class="stage" #stage>
+    @if (!webglSupported()) {
+      <div class="stage__fallback">
+        <h2>WebGL is unavailable</h2>
+        <p>
+          This prototype needs WebGL to render the character. Enable hardware acceleration or try a
+          different browser, then reload the page.
+        </p>
+      </div>
+    }
+  </div>
+
+  <div class="markers">
+    <span class="markers__label">Markers</span>
+    <div class="markers__row">
+      @for (index of markerIndexes; track index) {
+        <button
+          type="button"
+          class="markers__button"
+          [class.markers__button--current]="status().currentMarker === index"
+          [class.markers__button--target]="status().targetMarker === index"
+          (click)="selectMarker(index)"
+        >
+          {{ index + 1 }}
+        </button>
+      }
+    </div>
+    <p class="markers__hint">Click a marker on the line or a number above to walk there.</p>
+  </div>
+
+  <div class="panels">
+    <section class="panel">
+      <h2>Movement</h2>
+      <div class="panel__row">
+        <button type="button" class="btn btn--primary" (click)="togglePause()">
+          {{ status().paused ? 'Walk' : 'Pause' }}
+        </button>
+        <button type="button" class="btn" (click)="reset()">Reset</button>
+      </div>
+
+      <label class="field">
+        <span class="field__label">Speed <em>{{ speed().toFixed(2) }} m/s</em></span>
+        <input
+          type="range"
+          min="0.2"
+          max="3"
+          step="0.05"
+          [value]="speed()"
+          (input)="onSpeedInput($event)"
+        />
+      </label>
+
+      <label class="field field--inline">
+        <input type="checkbox" [checked]="status().continuous" (change)="onContinuousChange($event)" />
+        <span>Continuous back &amp; forth</span>
+      </label>
+
+      <label class="field">
+        <span class="field__label">Outline thickness <em>{{ outlineThickness().toFixed(3) }}</em></span>
+        <input
+          type="range"
+          min="0"
+          max="0.03"
+          step="0.001"
+          [value]="outlineThickness()"
+          (input)="onOutlineInput($event)"
+        />
+      </label>
+    </section>
+
+    <section class="panel">
+      <h2>Appearance</h2>
+      <div class="panel__row">
+        @for (preset of presets; track preset.id) {
+          <button
+            type="button"
+            class="btn btn--chip"
+            [class.btn--active]="activePreset() === preset.id"
+            (click)="applyPreset(preset)"
+          >
+            {{ preset.label }}
+          </button>
+        }
+      </div>
+
+      @for (slider of sliders; track slider.key) {
+        <label class="field">
+          <span class="field__label">
+            {{ slider.label }} <em>{{ configValue(slider.key).toFixed(2) }}{{ slider.unit }}</em>
+          </span>
+          <input
+            type="range"
+            [min]="slider.min"
+            [max]="slider.max"
+            [step]="slider.step"
+            [value]="configValue(slider.key)"
+            (input)="onSliderInput(slider.key, $event)"
+          />
+        </label>
+      }
+    </section>
+  </div>
+</section>
