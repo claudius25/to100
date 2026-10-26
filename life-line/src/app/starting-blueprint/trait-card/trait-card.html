@@ -1,0 +1,110 @@
+<article class="card">
+  <div class="card__icon" aria-hidden="true">
+    @switch (config().icon) {
+      @case ('battery') {
+        <svg viewBox="0 0 64 64" role="presentation" focusable="false">
+          <g class="icon__sparks">
+            <path d="M22 16 L19 9" />
+            <path d="M32 14 L32 6" />
+            <path d="M42 16 L45 9" />
+          </g>
+          <rect x="8" y="23" width="40" height="24" rx="7" class="icon__fill" />
+          <rect x="48" y="30" width="7" height="10" rx="3" class="icon__solid" />
+          <rect x="8" y="23" width="40" height="24" rx="7" class="icon__stroke" />
+          <g class="icon__knockout">
+            <rect x="22.5" y="32.5" width="13" height="5" rx="2" />
+            <rect x="26.5" y="28.5" width="5" height="13" rx="2" />
+          </g>
+        </svg>
+      }
+      @case ('coin') {
+        <svg viewBox="0 0 64 64" role="presentation" focusable="false">
+          <g class="icon__sparks">
+            <path d="M21 17 L18 10" />
+            <path d="M32 14 L32 6" />
+            <path d="M43 17 L46 10" />
+          </g>
+          <circle cx="32" cy="35" r="17" class="icon__fill" />
+          <circle cx="32" cy="35" r="17" class="icon__stroke" />
+          <circle cx="32" cy="35" r="12.5" class="icon__stroke icon__stroke--thin" />
+          <path d="M32 24 L32 46" class="icon__stroke icon__stroke--thin" />
+          <path
+            d="M38 29.5 C38 26.4 35.3 25 32 25 C28.7 25 26 26.4 26 29.3 C26 32.2 29 33.2 32 34
+               C35 34.8 38 35.8 38 38.8 C38 41.8 35.3 43.4 32 43.4 C28.7 43.4 26 42 26 38.9"
+            class="icon__stroke"
+          />
+        </svg>
+      }
+      @case ('shield') {
+        <svg viewBox="0 0 64 64" role="presentation" focusable="false">
+          <g class="icon__sparks">
+            <path d="M21 15 L18 8" />
+            <path d="M32 12 L32 5" />
+            <path d="M43 15 L46 8" />
+          </g>
+          <path
+            d="M32 15 L49 21.5 V34 C49 43.5 41 50.5 32 53.5 C23 50.5 15 43.5 15 34 V21.5 Z"
+            class="icon__plate"
+          />
+          <path
+            d="M32 15 L49 21.5 V34 C49 43.5 41 50.5 32 53.5 C23 50.5 15 43.5 15 34 V21.5 Z"
+            class="icon__stroke"
+          />
+          <path
+            d="M32 43 C23.5 37.2 20.5 33.6 20.5 29.9 C20.5 26.7 23 24.2 26.2 24.2
+               C28.5 24.2 30.8 25.5 32 27.6 C33.2 25.5 35.5 24.2 37.8 24.2
+               C41 24.2 43.5 26.7 43.5 29.9 C43.5 33.6 40.5 37.2 32 43 Z"
+            class="icon__fill"
+          />
+          <path
+            d="M32 43 C23.5 37.2 20.5 33.6 20.5 29.9 C20.5 26.7 23 24.2 26.2 24.2
+               C28.5 24.2 30.8 25.5 32 27.6 C33.2 25.5 35.5 24.2 37.8 24.2
+               C41 24.2 43.5 26.7 43.5 29.9 C43.5 33.6 40.5 37.2 32 43 Z"
+            class="icon__stroke icon__stroke--thin"
+          />
+        </svg>
+      }
+      @case ('bubbles') {
+        <svg viewBox="0 0 64 64" role="presentation" focusable="false">
+          <g class="icon__sparks">
+            <path d="M50 17 L53 10" />
+            <path d="M58 25 L63 22" />
+          </g>
+          <path
+            d="M14 17 H36 A12 12 0 0 1 48 29 A12 12 0 0 1 36 41 H24 L14 50 V40.4
+               A12 12 0 0 1 14 17 Z"
+            class="icon__fill"
+          />
+          <path
+            d="M14 17 H36 A12 12 0 0 1 48 29 A12 12 0 0 1 36 41 H24 L14 50 V40.4
+               A12 12 0 0 1 14 17 Z"
+            class="icon__stroke"
+          />
+          <path
+            d="M44 31 H50 A9 9 0 0 1 50 49 H44 L52 56 V48.4 A9 9 0 0 1 44 31 Z"
+            class="icon__fill"
+          />
+          <path
+            d="M44 31 H50 A9 9 0 0 1 50 49 H44 L52 56 V48.4 A9 9 0 0 1 44 31 Z"
+            class="icon__stroke"
+          />
+        </svg>
+      }
+    }
+  </div>
+
+  <h2 class="card__title">{{ config().title }}</h2>
+  <p class="card__description">{{ config().description }}</p>
+
+  <p class="card__value" [class.card__value--tumbling]="tumbling()" aria-hidden="true">
+    <span class="card__number">{{ displayValue() }}</span><span class="card__total">/{{ faces }}</span>
+  </p>
+
+  <div class="card__pips" aria-hidden="true">
+    @for (pip of pips; track pip) {
+      <span class="card__pip" [class.card__pip--filled]="pip < filled()"></span>
+    }
+  </div>
+
+  <span class="sr-only">{{ accessibleResult() }}</span>
+</article>

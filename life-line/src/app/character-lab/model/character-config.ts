@@ -124,14 +124,14 @@ export interface CharacterMetrics {
   readonly headRadius: number;
   readonly footLength: number;
   readonly footWidth: number;
-  /** Ground distance covered by one full two-step gait cycle. */
+  /** Ground distance covered by one full two-step gait cycle at the natural pace. */
   readonly cycleDistance: number;
+  /** Speed at which the natural stride is used; faster settings lengthen the stride. */
+  readonly preferredSpeed: number;
   /** Peak foot clearance during swing. */
   readonly footLift: number;
   /** Vertical pelvis oscillation amplitude while walking. */
   readonly bobAmplitude: number;
-  /** Pelvis drop while walking so the legs can reach the contact pose. */
-  readonly walkCrouch: number;
   readonly totalHeight: number;
 }
 
@@ -166,12 +166,6 @@ export function computeMetrics(rawConfig: CharacterConfig): CharacterMetrics {
 
   const stepLength = Math.min(0.46 * hipHeight, 0.62 * legSpan);
   const cycleDistance = 2 * stepLength;
-  const halfStep = cycleDistance / 4;
-
-  // Pelvis drop required so a fully extended leg still reaches the contact point.
-  const reach = thighLength + shinLength;
-  const crouchExact = reach - Math.sqrt(Math.max(0, reach * reach - halfStep * halfStep));
-  const walkCrouch = crouchExact * 1.2 + reach * 0.01;
 
   return {
     scale,
@@ -196,9 +190,9 @@ export function computeMetrics(rawConfig: CharacterConfig): CharacterMetrics {
     footLength: headRadiusRaw * scale * 1.7,
     footWidth: bodyRadius * 0.7,
     cycleDistance,
+    preferredSpeed: 1.2 * Math.sqrt(hipHeight / 0.9),
     footLift: legSpan * 0.1,
     bobAmplitude: hipHeight * 0.022,
-    walkCrouch,
     totalHeight: config.height,
   };
 }

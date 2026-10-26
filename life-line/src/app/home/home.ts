@@ -9,7 +9,10 @@ import { RouterLink } from '@angular/router';
     <section class="home">
       <h1>Life Line</h1>
       <p>A minimalist life journey game — prototype shell.</p>
-      <a class="home__link" routerLink="/character-lab">Open the Character Lab →</a>
+      <nav class="home__links">
+        <a class="home__link" routerLink="/starting-blueprint">Roll your starting blueprint →</a>
+        <a class="home__link home__link--ghost" routerLink="/character-lab">Open the Character Lab →</a>
+      </nav>
     </section>
   `,
   styles: `
@@ -36,6 +39,12 @@ import { RouterLink } from '@angular/router';
       color: #70767e;
     }
 
+    .home__links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+    }
+
     .home__link {
       display: inline-block;
       padding: 0.55rem 1rem;
@@ -45,6 +54,11 @@ import { RouterLink } from '@angular/router';
       color: #fff;
       text-decoration: none;
       font-size: 0.92rem;
+    }
+
+    .home__link--ghost {
+      background: transparent;
+      color: #2f3236;
     }
   `,
 })

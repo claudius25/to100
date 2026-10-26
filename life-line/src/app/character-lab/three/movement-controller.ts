@@ -2,8 +2,11 @@
 export interface MovementSnapshot {
   readonly x: number;
   readonly yaw: number;
+  /** Eased 0..1 walk weight; the animator blends idle <-> walk with it. */
   readonly walkBlend: number;
   readonly gaitPhase: number;
+  /** Ground distance covered by one full gait cycle at the current speed. */
+  readonly strideLength: number;
   readonly currentMarker: number | null;
   readonly targetMarker: number | null;
   readonly moving: boolean;
@@ -11,9 +14,13 @@ export interface MovementSnapshot {
 }
 
 const ARRIVE_EPSILON = 1e-4;
-const TURN_SPEED = 7.0;
-const BLEND_IN_RATE = 1 / 0.18;
-const BLEND_OUT_RATE = 1 / 0.26;
+const TURN_SPEED = 5.2;
+const BLEND_IN_RATE = 1 / 0.32;
+const BLEND_OUT_RATE = 1 / 0.38;
+/** How fast the stride may stretch/shrink when the speed slider moves (per second). */
+const STRIDE_ADAPT_RATE = 0.7;
+/** Virtual ground distance credited per radian of pivoting, so he shuffles round. */
+const TURN_STEP_FACTOR = 0.09;
 
 /**
  * Owns translation along the line: marker targeting, facing, gait phase.
@@ -24,10 +31,13 @@ export class MovementController {
   private yaw = 0;
   private walkBlend = 0;
   private gaitPhase = 0;
+  private strideScale = 1;
   private targetMarker: number | null = null;
   private continuous = false;
   private speed = 1.1;
   private cycleDistance = 0.8;
+  private preferredSpeed = 1.25;
+  private adaptiveStride = true;
 
   constructor(private readonly markers: readonly number[]) {
     this.x = markers[0] ?? 0;
@@ -45,9 +55,23 @@ export class MovementController {
     return this.speed;
   }
 
-  /** Keeps the gait tied to distance travelled when the body proportions change. */
-  setCycleDistance(distance: number): void {
-    this.cycleDistance = Math.max(0.05, distance);
+  /**
+   * Keeps the gait tied to distance travelled when the body proportions change.
+   * `preferredSpeed` is the speed at which the natural stride is used; walking
+   * faster lengthens the stride instead of just spinning the legs quicker.
+   * Set `adaptive` to false when the stride is baked into an animation clip.
+   */
+  setGait(cycleDistance: number, preferredSpeed: number, adaptive = true): void {
+    this.cycleDistance = Math.max(0.05, cycleDistance);
+    this.preferredSpeed = Math.max(0.1, preferredSpeed);
+    this.adaptiveStride = adaptive;
+    if (!adaptive) {
+      this.strideScale = 1;
+    }
+  }
+
+  private strideLength(): number {
+    return this.cycleDistance * this.strideScale;
   }
 
   setTarget(index: number): void {
@@ -88,6 +112,7 @@ export class MovementController {
     this.yaw = 0;
     this.walkBlend = 0;
     this.gaitPhase = 0;
+    this.strideScale = 1;
     this.targetMarker = null;
     this.continuous = false;
   }
@@ -103,8 +128,9 @@ export class MovementController {
     return {
       x: this.x,
       yaw: this.yaw,
-      walkBlend: this.walkBlend,
+      walkBlend: smoothstep(this.walkBlend),
       gaitPhase: this.gaitPhase,
+      strideLength: this.strideLength(),
       currentMarker: this.currentMarkerIndex(),
       targetMarker: this.targetMarker,
       moving: this.walkBlend > 0.01,
@@ -130,9 +156,21 @@ export class MovementController {
 
     const wantsToWalk = direction !== 0;
 
+    // Longer legs and faster settings produce longer strides rather than a
+    // cartoon-fast leg spin; the rate limit stops the stance foot from popping.
+    // Imported clips carry their own baked stride, so they opt out.
+    const targetScale = this.adaptiveStride
+      ? clamp(Math.pow(this.speed / this.preferredSpeed, 0.55), 0.74, 1.5)
+      : 1;
+    this.strideScale = approach(this.strideScale, targetScale, STRIDE_ADAPT_RATE * dt);
+    const stride = this.strideLength();
+
+    let turned = 0;
     if (direction !== 0) {
       const desiredYaw = direction > 0 ? 0 : Math.PI;
+      const previousYaw = this.yaw;
       this.yaw = turnToward(this.yaw, desiredYaw, TURN_SPEED * dt);
+      turned = Math.abs(this.yaw - previousYaw);
     }
 
     // Slow right down while the turn is in progress so he pivots on the spot.
@@ -142,9 +180,16 @@ export class MovementController {
     const blendTarget = wantsToWalk ? 1 : 0;
     const blendRate = wantsToWalk ? BLEND_IN_RATE : BLEND_OUT_RATE;
     this.walkBlend = approach(this.walkBlend, blendTarget, blendRate * dt);
+    const easedBlend = smoothstep(this.walkBlend);
+
+    // Feet keep shuffling while he pivots instead of freezing mid-stride.
+    let travelled = turned * TURN_STEP_FACTOR * stride * easedBlend;
 
     if (direction !== 0) {
-      const velocity = this.speed * facingFactor * this.walkBlend;
+      // Ease the last stride down to a slow approach so he settles onto the
+      // marker instead of stopping dead at full speed.
+      const approachEase = smoothstep(clamp(Math.abs(remaining) / (stride * 0.8), 0, 1));
+      const velocity = this.speed * facingFactor * easedBlend * (0.3 + 0.7 * approachEase);
       let step = velocity * dt;
       if (step >= Math.abs(remaining)) {
         step = Math.abs(remaining);
@@ -153,7 +198,11 @@ export class MovementController {
       } else {
         this.x += direction * step;
       }
-      this.gaitPhase = (this.gaitPhase + step / this.cycleDistance) % 1;
+      travelled += step;
+    }
+
+    if (travelled > 0) {
+      this.gaitPhase = (this.gaitPhase + travelled / stride) % 1;
     }
   }
 
@@ -206,6 +255,15 @@ function approach(value: number, target: number, maxDelta: number): number {
     return target;
   }
   return value + Math.sign(delta) * maxDelta;
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+function smoothstep(t: number): number {
+  const x = clamp(t, 0, 1);
+  return x * x * (3 - 2 * x);
 }
 
 /** Shortest-path yaw interpolation so he never spins the long way round. */

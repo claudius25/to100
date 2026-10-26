@@ -19,6 +19,7 @@ import {
   type CharacterPreset,
   type SliderSpec,
 } from './model/character-config';import { isWebGLAvailable, MARKER_COUNT, SceneController, type LabStatus } from './three/scene-controller';
+import type { CharacterMode } from './model/character-driver';
 
 const IDLE_STATUS: LabStatus = {
   currentMarker: 0,
@@ -27,6 +28,9 @@ const IDLE_STATUS: LabStatus = {
   moving: false,
   continuous: false,
   paused: false,
+  mode: 'procedural',
+  loading: false,
+  error: null,
 };
 
 @Component({
@@ -56,6 +60,9 @@ export class CharacterLab {
 
   protected readonly statusLabel = computed(() => {
     const state = this.status();
+    if (state.loading) {
+      return 'Loading character…';
+    }
     if (state.paused) {
       return 'Paused';
     }
@@ -67,6 +74,8 @@ export class CharacterLab {
     }
     return 'Idle';
   });
+
+  protected readonly isGlb = computed(() => this.status().mode === 'glb');
 
   constructor() {
     afterNextRender(() => this.initialiseScene());
@@ -142,6 +151,10 @@ export class CharacterLab {
 
   protected selectMarker(index: number): void {
     this.scene?.selectMarker(index);
+  }
+
+  protected setMode(mode: CharacterMode): void {
+    this.scene?.setMode(mode);
   }
 
   protected togglePause(): void {

@@ -40,6 +40,40 @@
 
   <div class="panels">
     <section class="panel">
+      <h2>Character</h2>
+      <div class="panel__row">
+        <button
+          type="button"
+          class="btn btn--chip"
+          [class.btn--active]="!isGlb()"
+          (click)="setMode('procedural')"
+        >
+          Procedural rig
+        </button>
+        <button
+          type="button"
+          class="btn btn--chip"
+          [class.btn--active]="isGlb()"
+          (click)="setMode('glb')"
+        >
+          Imported GLB
+        </button>
+      </div>
+      @if (status().loading) {
+        <p class="panel__note">Loading idle_loop.glb and walk_loop.glb…</p>
+      }
+      @if (status().error) {
+        <p class="panel__note panel__note--error">{{ status().error }}</p>
+      }
+      @if (isGlb()) {
+        <p class="panel__note">
+          Skinned mannequin with imported idle/walk clips. The walk clip's baked root motion sets
+          the stride, so only <em>Height</em> applies — the shape sliders drive the procedural rig.
+        </p>
+      }
+    </section>
+
+    <section class="panel">
       <h2>Movement</h2>
       <div class="panel__row">
         <button type="button" class="btn btn--primary" (click)="togglePause()">
@@ -94,7 +128,7 @@
       </div>
 
       @for (slider of sliders; track slider.key) {
-        <label class="field">
+        <label class="field" [class.field--disabled]="isGlb() && slider.key !== 'height'">
           <span class="field__label">
             {{ slider.label }} <em>{{ configValue(slider.key).toFixed(2) }}{{ slider.unit }}</em>
           </span>
@@ -104,6 +138,7 @@
             [max]="slider.max"
             [step]="slider.step"
             [value]="configValue(slider.key)"
+            [disabled]="isGlb() && slider.key !== 'height'"
             (input)="onSliderInput(slider.key, $event)"
           />
         </label>

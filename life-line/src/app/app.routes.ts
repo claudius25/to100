@@ -12,5 +12,11 @@ export const routes: Routes = [
     title: 'Life Line — Character Lab',
     loadComponent: () => import('./character-lab/character-lab').then((m) => m.CharacterLab),
   },
+  {
+    path: 'starting-blueprint',
+    title: 'Life Line — Your Starting Blueprint',
+    loadComponent: () =>
+      import('./starting-blueprint/starting-blueprint').then((m) => m.StartingBlueprintPage),
+  },
   { path: '**', redirectTo: '' },
 ];

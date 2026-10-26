@@ -16,6 +16,8 @@ export interface LegJoints {
 export interface ArmJoints {
   readonly shoulder: Group;
   readonly elbow: Group;
+  /** Carries the hand; used for a little follow-through on the swing. */
+  readonly wrist: Group;
 }
 
 export interface CharacterRig {

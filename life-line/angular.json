@@ -27,9 +27,17 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "**/*.glb",
+                "input": "src/assets",
+                "output": "assets"
               }
             ],
             "styles": [
+              "node_modules/@fontsource/barlow-condensed/latin-700-italic.css",
+              "node_modules/@fontsource/barlow-condensed/latin-800-italic.css",
+              "node_modules/@fontsource/barlow-condensed/latin-500-italic.css",
               "src/styles.scss"
             ]
           },

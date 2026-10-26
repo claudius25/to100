@@ -17,16 +17,11 @@ import {
   type BufferGeometry,
   type Material,
 } from 'three';
-import {
-  DEFAULT_CHARACTER_CONFIG,
-  computeMetrics,
-  type CharacterConfig,
-} from '../model/character-config';
-import type { CharacterRig } from '../model/character-rig';
-import { CharacterAnimator } from './character-animator';
-import { createCharacter } from './character-factory';
+import { DEFAULT_CHARACTER_CONFIG, type CharacterConfig } from '../model/character-config';
+import type { CharacterDriver, CharacterMode } from '../model/character-driver';
+import { loadGlbCharacter, type GlbCharacterAssets } from './glb-character';
 import { buildMarkerPositions, MovementController } from './movement-controller';
-import { OutlineMaterialSet } from './outline';
+import { ProceduralCharacter } from './procedural-character';
 
 export interface LabStatus {
   readonly currentMarker: number | null;
@@ -35,9 +30,16 @@ export interface LabStatus {
   readonly moving: boolean;
   readonly continuous: boolean;
   readonly paused: boolean;
+  readonly mode: CharacterMode;
+  readonly loading: boolean;
+  readonly error: string | null;
 }
 
 export const MARKER_COUNT = 12;
+export const GLB_ASSETS: GlbCharacterAssets = {
+  idleUrl: 'assets/idle_loop.glb',
+  walkUrl: 'assets/walk_loop.glb',
+};
 const MARKER_SPAN = 6.0;
 const BASE_VIEW_HEIGHT = 2.9;
 const BASE_VIEW_WIDTH = 6.8;
@@ -74,8 +76,6 @@ export class SceneController {
   private readonly scene = new Scene();
   private readonly camera = new OrthographicCamera(-1, 1, 1, -1, 0.1, 100);
   private readonly movement = new MovementController(buildMarkerPositions(MARKER_COUNT, MARKER_SPAN));
-  private readonly animator = new CharacterAnimator();
-  private readonly outlines = new OutlineMaterialSet(CHARCOAL, 0.011);
   private readonly raycaster = new Raycaster();
   private readonly pointer = new Vector2();
   private readonly markers: MarkerVisual[] = [];
@@ -84,7 +84,13 @@ export class SceneController {
 
   private renderer: WebGLRenderer | null = null;
   private canvas: HTMLCanvasElement | null = null;
-  private rig: CharacterRig | null = null;
+  private driver: CharacterDriver | null = null;
+  private glbCharacter: Awaited<ReturnType<typeof loadGlbCharacter>> | null = null;
+  private mode: CharacterMode = 'procedural';
+  private loadToken = 0;
+  private loading = false;
+  private loadError: string | null = null;
+  private outlineThickness = 0.011;
   private resizeObserver: ResizeObserver | null = null;
   private config: CharacterConfig = { ...DEFAULT_CHARACTER_CONFIG };
   private groundLine: Mesh | null = null;
@@ -104,12 +110,13 @@ export class SceneController {
     private readonly onStatus: (status: LabStatus) => void,
   ) {}
 
-  init(config: CharacterConfig): void {
+  init(config: CharacterConfig, mode: CharacterMode = 'procedural'): void {
     if (this.started || this.disposed) {
       return;
     }
     this.started = true;
     this.config = { ...config };
+    this.mode = mode;
 
     const renderer = new WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -131,7 +138,11 @@ export class SceneController {
 
     this.buildGround();
     this.buildMarkers();
-    this.rebuildCharacter();
+    if (mode === 'glb') {
+      void this.activateGlb();
+    } else {
+      this.activateProcedural();
+    }
 
     this.canvas.addEventListener('pointerdown', this.onPointerDown);
     this.canvas.addEventListener('pointermove', this.onPointerMove);
@@ -151,9 +162,35 @@ export class SceneController {
     return this.movement.getMarkers().length;
   }
 
+  getMode(): CharacterMode {
+    return this.mode;
+  }
+
+  /** Switches between the procedural rig and the imported GLB character. */
+  setMode(mode: CharacterMode): void {
+    if (mode === this.mode && (this.driver || this.loading)) {
+      return;
+    }
+    this.mode = mode;
+    this.loadError = null;
+    if (mode === 'glb') {
+      void this.activateGlb();
+    } else {
+      this.activateProcedural();
+    }
+    this.emitStatus();
+  }
+
   setConfig(config: CharacterConfig): void {
     this.config = { ...config };
-    this.rebuildCharacter();
+    if (this.driver instanceof ProceduralCharacter) {
+      this.driver.setConfig(this.config);
+      this.syncGait();
+    } else if (this.glbCharacter) {
+      // Only overall height is meaningful for an imported mesh.
+      this.glbCharacter.setHeight(this.config.height);
+      this.syncGait();
+    }
   }
 
   setSpeed(speed: number): void {
@@ -161,11 +198,12 @@ export class SceneController {
   }
 
   setOutlineThickness(thickness: number): void {
-    this.outlines.setThickness(thickness);
+    this.outlineThickness = thickness;
+    this.driver?.setOutlineThickness(thickness);
   }
 
   getOutlineThickness(): number {
-    return this.outlines.getThickness();
+    return this.outlineThickness;
   }
 
   selectMarker(index: number): void {
@@ -198,7 +236,7 @@ export class SceneController {
   reset(): void {
     this.movement.reset();
     this.paused = false;
-    this.animator.update(0, this.movement.snapshot());
+    this.driver?.update(0, this.movement.snapshot());
     this.emitStatus();
   }
 
@@ -217,9 +255,8 @@ export class SceneController {
     this.canvas?.removeEventListener('pointerleave', this.onPointerLeave);
     document.removeEventListener('visibilitychange', this.onVisibilityChange);
 
-    this.animator.setRig(null);
-    this.rig?.dispose();
-    this.rig = null;
+    this.loadToken++;
+    this.releaseDriver();
 
     for (const geometry of this.ownedGeometries) {
       geometry.dispose();
@@ -229,7 +266,6 @@ export class SceneController {
     }
     this.ownedGeometries.length = 0;
     this.ownedMaterials.length = 0;
-    this.outlines.dispose();
 
     this.scene.clear();
 
@@ -252,22 +288,73 @@ export class SceneController {
     const delta = this.paused ? 0 : Math.min(Math.max(rawDelta, 0), MAX_DELTA_SECONDS);
 
     const snapshot = this.movement.update(delta);
-    this.animator.update(delta, snapshot);
+    this.driver?.update(delta, snapshot);
     this.updateMarkerHighlights(snapshot.targetMarker, snapshot.currentMarker);
     this.renderer.render(this.scene, this.camera);
     this.emitStatus();
   };
 
-  private rebuildCharacter(): void {
-    this.animator.setRig(null);
-    this.rig?.dispose();
+  private activateProcedural(): void {
+    this.loadToken++;
+    this.releaseDriver();
+    const character = new ProceduralCharacter(this.config, this.outlineThickness);
+    this.scene.add(character.root);
+    this.driver = character;
+    this.syncGait();
+    this.driver.update(0, this.movement.snapshot());
+  }
 
-    const rig = createCharacter(this.config, this.outlines);
-    this.scene.add(rig.root);
-    this.rig = rig;
-    this.animator.setRig(rig);
-    this.movement.setCycleDistance(computeMetrics(this.config).cycleDistance);
-    this.animator.update(0, this.movement.snapshot());
+  private async activateGlb(): Promise<void> {
+    const token = ++this.loadToken;
+    this.releaseDriver();
+    this.loading = true;
+    this.loadError = null;
+    this.emitStatus();
+
+    try {
+      const character = await loadGlbCharacter(GLB_ASSETS, this.config.height);
+      // A newer mode switch (or disposal) happened while we were loading.
+      if (this.disposed || token !== this.loadToken) {
+        character.dispose();
+        return;
+      }
+      character.setOutlineThickness(this.outlineThickness);
+      this.scene.add(character.root);
+      this.driver = character;
+      this.glbCharacter = character;
+      this.syncGait();
+      this.driver.update(0, this.movement.snapshot());
+    } catch (error) {
+      if (token !== this.loadToken) {
+        return;
+      }
+      this.loadError = error instanceof Error ? error.message : 'Failed to load the GLB character.';
+      this.mode = 'procedural';
+      this.activateProcedural();
+    } finally {
+      if (token === this.loadToken) {
+        this.loading = false;
+        this.emitStatus();
+      }
+    }
+  }
+
+  private releaseDriver(): void {
+    this.driver?.dispose();
+    this.driver = null;
+    this.glbCharacter = null;
+  }
+
+  /** Keeps the gait phase tied to the active character's real stride. */
+  private syncGait(): void {
+    if (!this.driver) {
+      return;
+    }
+    this.movement.setGait(
+      this.driver.cycleDistance,
+      this.driver.preferredSpeed,
+      this.driver.adaptiveStride,
+    );
   }
 
   private buildGround(): void {
@@ -426,6 +513,9 @@ export class SceneController {
       moving: snapshot.moving && !this.paused,
       continuous: snapshot.continuous,
       paused: this.paused,
+      mode: this.mode,
+      loading: this.loading,
+      error: this.loadError,
     };
     const previous = this.lastStatus;
     if (
@@ -435,7 +525,10 @@ export class SceneController {
       previous.hoveredMarker === status.hoveredMarker &&
       previous.moving === status.moving &&
       previous.continuous === status.continuous &&
-      previous.paused === status.paused
+      previous.paused === status.paused &&
+      previous.mode === status.mode &&
+      previous.loading === status.loading &&
+      previous.error === status.error
     ) {
       return;
     }

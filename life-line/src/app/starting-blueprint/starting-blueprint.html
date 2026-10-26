@@ -1,0 +1,57 @@
+<section class="blueprint">
+  <header class="blueprint__header">
+    <a class="blueprint__back" routerLink="/">← Life Line</a>
+    <h1 class="blueprint__title">YOUR STARTING BLUEPRINT</h1>
+    <p class="blueprint__subtitle">Roll the dice. Discover your starting circumstances.</p>
+  </header>
+
+  <div class="blueprint__grid">
+    @for (card of cards(); track card.config.key) {
+      <app-trait-card [config]="card.config" [value]="card.value" [tumbling]="card.tumbling" />
+    }
+  </div>
+
+  <p class="blueprint__tagline">
+    Your starting point shapes the journey. Your choices shape what comes next.
+  </p>
+
+  <footer class="blueprint__footer">
+    <p class="blueprint__note">Every life starts differently.</p>
+
+    <button
+      type="button"
+      class="btn btn--primary"
+      [disabled]="rolling()"
+      [attr.aria-busy]="rolling()"
+      (click)="roll()"
+    >
+      <svg class="btn__icon" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+        <rect x="4" y="4" width="24" height="24" rx="7" />
+        <circle cx="12" cy="12" r="2.4" class="btn__pip" />
+        <circle cx="20" cy="20" r="2.4" class="btn__pip" />
+        <circle cx="20" cy="12" r="2.4" class="btn__pip" />
+      </svg>
+      {{ rollLabel() }}
+    </button>
+
+    <button
+      type="button"
+      class="btn btn--secondary"
+      [disabled]="!canBegin()"
+      (click)="begin()"
+    >
+      BEGIN LIFE
+      <svg class="btn__icon btn__icon--arrow" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+        <path d="M6 16 H24" />
+        <path d="M18 10 L24 16 L18 22" />
+      </svg>
+    </button>
+  </footer>
+
+  @if (started()) {
+    <p class="blueprint__locked">Blueprint locked in — ready to begin.</p>
+  }
+
+  <!-- Only the settled result is announced, never the tumbling frames. -->
+  <p class="sr-only" role="status" aria-live="polite">{{ announcement() }}</p>
+</section>

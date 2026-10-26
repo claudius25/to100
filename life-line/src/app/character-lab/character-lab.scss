@@ -186,6 +186,22 @@
     flex-wrap: wrap;
     gap: 0.5rem;
   }
+
+  &__note {
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.45;
+    color: #80858d;
+
+    em {
+      font-style: normal;
+      color: #4a4f57;
+    }
+
+    &--error {
+      color: #a3362f;
+    }
+  }
 }
 
 .btn {
@@ -248,5 +264,10 @@
     align-items: center;
     gap: 0.5rem;
     color: #4a4f57;
+  }
+
+  &--disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
   }
 }

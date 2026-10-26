@@ -247,11 +247,16 @@ function buildArm(
   const forearm = addPart(elbow, limbGeometry(metrics.armRadius * 0.92, metrics.forearmLength), skin);
   forearm.position.y = -metrics.forearmLength / 2;
 
-  const hand = addPart(elbow, new SphereGeometry(metrics.handRadius, 18, 14), skin);
-  hand.position.y = -metrics.forearmLength - metrics.handRadius * 0.3;
+  const wrist = new Group();
+  wrist.name = `wrist${offsetZ > 0 ? 'Near' : 'Far'}`;
+  wrist.position.y = -metrics.forearmLength;
+  elbow.add(wrist);
+
+  const hand = addPart(wrist, new SphereGeometry(metrics.handRadius, 18, 14), skin);
+  hand.position.y = -metrics.handRadius * 0.3;
   hand.scale.set(1.1, 1.25, 0.72);
 
-  return { shoulder, elbow };
+  return { shoulder, elbow, wrist };
 }
 
 function buildLeg(
