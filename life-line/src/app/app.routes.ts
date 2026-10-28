@@ -1,3 +1,4 @@
+import { isDevMode } from '@angular/core';
 import { Routes } from '@angular/router';
 
 export const routes: Routes = [
@@ -6,6 +7,11 @@ export const routes: Routes = [
     pathMatch: 'full',
     title: 'Life Line',
     loadComponent: () => import('./home/home').then((m) => m.Home),
+  },
+  {
+    path: 'game',
+    title: 'TO100 - Game',
+    loadComponent: () => import('./game/game').then((m) => m.GamePage),
   },
   {
     path: 'character-lab',
@@ -18,5 +24,14 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./starting-blueprint/starting-blueprint').then((m) => m.StartingBlueprintPage),
   },
+  ...(isDevMode()
+    ? [
+        {
+          path: 'simulation',
+          title: 'TO100 - Simulation',
+          loadComponent: () => import('./simulation/simulation').then((m) => m.SimulationPage),
+        },
+      ]
+    : []),
   { path: '**', redirectTo: '' },
 ];

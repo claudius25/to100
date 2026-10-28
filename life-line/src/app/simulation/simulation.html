@@ -1,0 +1,51 @@
+<main>
+  <h1>TO100 simulation</h1>
+  <p>Development debug tool. Encounter numbers are fictional balancing placeholders.</p>
+  <button type="button" (click)="newGame()">New game</button>
+  <button type="button" (click)="rollDice()" [disabled]="state().status === 'completed'">
+    Roll dice
+  </button>
+
+  <section aria-label="Current game" aria-live="polite">
+    <h2>{{ state().hero.name }}</h2>
+    <p>Age: {{ state().hero.ageYears }} years, {{ state().hero.ageRemainingWeeks }} weeks</p>
+    <p>
+      Health: {{ state().hero.condition.health }} | Energy: {{ state().hero.condition.energy }} |
+      Mood: {{ state().hero.condition.mood }} | Money: {{ state().hero.resources.money }}
+    </p>
+    <p>Status: {{ state().status }} | Turn: {{ state().turnNumber }}</p>
+    @if (state().history.at(-1); as last) {
+      <h3>Last turn</h3>
+      <p>Dice: {{ last.dice[0] }} + {{ last.dice[1] }} = {{ last.diceSum }}</p>
+      <p>Weeks advanced: {{ last.weeksAdvanced }}</p>
+      @if (last.resolvedStep; as step) {
+        <h4>{{ step.title }}</h4>
+        <p>{{ step.description }}</p>
+      } @else {
+        <p>Reached 100 years. No encounter resolved.</p>
+      }
+      <p>Actual changes: {{ last.appliedChanges | json }}</p>
+    } @else {
+      <p>No dice rolled or encounter resolved yet.</p>
+    }
+  </section>
+
+  <h2>Turn log (oldest first)</h2>
+  <ol>
+    @for (turn of state().history; track turn.turnNumber) {
+      <li>
+        Turn {{ turn.turnNumber }}: dice {{ turn.dice[0] }} + {{ turn.dice[1] }} =
+        {{ turn.diceSum }}; +{{ turn.weeksAdvanced }} weeks ({{ turn.ageBefore }} to
+        {{ turn.ageAfter }}). {{ turn.resolvedStep?.title ?? 'Reached 100 years' }}. Changes:
+        {{ turn.appliedChanges | json }}. Status: {{ turn.status }}.
+      </li>
+    } @empty {
+      <li>No turns yet.</li>
+    }
+  </ol>
+
+  <details>
+    <summary>Current state JSON</summary>
+    <pre>{{ state() | json }}</pre>
+  </details>
+</main>

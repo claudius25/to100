@@ -2,6 +2,78 @@
 
 Minimalist life-journey game prototype (Angular 21 + plain Three.js).
 
+## Play TO100
+
+Run `npm start` and open **http://localhost:4200/game**, or choose **Play TO100**
+on the home page. The game route is available in both development and production.
+
+The standalone page in `src/app/game/` uses the same Angular-independent
+`GameEngine` as the simulation. Its full-screen landscape has a pale textured sky,
+dark ground, twelve numbered encounter icons, a static baby silhouette, and two
+clickable dice. The dice result is shown for 800ms before the baby starts moving.
+The baby slides (without a crawling animation) to the landing
+offset, then a modal describes the encounter and actual changes. Press **OK** to
+slide the environment and character left together, returning the hero to the starting
+position. Uncrossed encounters stay on the path; `StepFactory` appends only the missing
+tiles to restore twelve. Numbers are relative roll offsets and reset after every scene
+shift: only 2 through 12 are displayed; the unreachable number 1 is always hidden.
+The initial unreachable offset 1 is empty and has no icon. Later offset 1 can contain
+a preserved encounter but remains unreachable on that roll.
+Rolling is locked during landing, the popup, and camera scrolling. New game resets
+the presentation as well as the engine, including the dice pause. Reduced-motion
+settings shorten both slides but keep the 800ms pause to read the dice result.
+Hover or focus a step for its encounter details. Money, energy, health, mood, and age
+remain visible above the horizon, with the resolved encounter shown in the sky.
+
+Use **State & debug** below the scene for blueprint, inventory, journey log, and
+**Debug: current state JSON**. JSON reflects the engine immediately after each roll
+or reset, even while the previous board is being used for the presentation-only
+slide. The texture and silhouette are local SVG artwork; no Three.js is used here.
+
+Each visit starts a new in-memory game with the model's default blueprint (all four
+traits at 50). The separate starting-blueprint dice prototype is not imported or
+converted to the model's trait scale. Leaving/reloading the page loses the session;
+there is no save/load yet. New game resets all model state and upcoming encounters.
+
+## TO100 simulation
+
+Run `npm start` and open **http://localhost:4200/simulation**. This plain debugging
+page is registered only in Angular development mode; production builds fall through
+to the existing home redirect. Existing game pages are unchanged.
+
+The Angular-independent model lives in `src/app/simulation/model/`:
+`Hero`, `Step`, `StepFactory`, and `GameEngine`, with supporting types and separate
+encounter data in `step-templates.ts`. The page only calls the engine and renders
+detached snapshots. An optional RNG (values in `[0, 1)`) and template collection can
+be supplied to the engine/factory for deterministic testing.
+
+- Age uses 52 weeks per year, with a target of exactly 5,200 weeks.
+- Upcoming array index 0 is offset 1, which cannot be reached with two standard dice.
+  Only the landing encounter activates. The initial offset 1 is always empty.
+  After a turn the board drops crossed/landed steps, retains the remaining instances,
+  and generates only enough new age-eligible encounters to return to twelve.
+  This scrolling-board behavior replaces the earlier fresh-board prototype.
+  The final turn clears upcoming steps and does not generate more encounters.
+- A roll reaching/passing 5,200 weeks advances only the remaining weeks and resolves
+  no encounter. Later `rollTurn()` calls return `null` without consuming randomness
+  or changing state. Successful turns return a structured result and record a detached
+  hero snapshot in history. State reads and returned results are also detached.
+- Consumables activate immediately; collectibles are stored without applying effects.
+  Actual changes are net changes after applying effects in listed order and clamping.
+- Health 0 does **not** end the game yet. There are no passive effects or manual item
+  use. Blueprint values, including family finances and social skills, start at 50
+  and have no mechanics yet. Family finances are separate from personal money.
+- Age bands are whole-year ranges: 0 to before 5, 5 to before 14, 14 to before 25,
+  25 to before 60, and 60 onward. Effects are fictional game-balancing placeholders.
+
+Validation:
+
+```bash
+npm test -- --watch=false
+npm run build
+npm run build -- --configuration development
+```
+
 ## Character Lab
 
 The movement/appearance prototype lives at **`/character-lab`**: a procedural, articulated

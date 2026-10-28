@@ -10,8 +10,11 @@ import { RouterLink } from '@angular/router';
       <h1>Life Line</h1>
       <p>A minimalist life journey game — prototype shell.</p>
       <nav class="home__links">
+        <a class="home__link" routerLink="/game">Play TO100 →</a>
         <a class="home__link" routerLink="/starting-blueprint">Roll your starting blueprint →</a>
-        <a class="home__link home__link--ghost" routerLink="/character-lab">Open the Character Lab →</a>
+        <a class="home__link home__link--ghost" routerLink="/character-lab"
+          >Open the Character Lab →</a
+        >
       </nav>
     </section>
   `,
@@ -24,7 +27,11 @@ import { RouterLink } from '@angular/router';
       max-width: 1120px;
       margin: 0 auto;
       padding: 4rem 1.5rem;
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-family:
+        'Segoe UI',
+        system-ui,
+        -apple-system,
+        sans-serif;
       color: #2f3236;
     }
 
