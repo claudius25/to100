@@ -27,6 +27,7 @@ import { ReliefScene, type ReliefFrameStats } from './relief-scene';
 import {
   CHAPTER_COLORS,
   CHAPTER_DEBUG,
+  CHAPTER_DEV_BUTTON,
   CHAPTER_LIQUID,
   CHAPTER_SCENE,
   CHAPTER_STATS,
@@ -67,7 +68,8 @@ export class BlueprintWater {
   protected readonly colors = CHAPTER_COLORS;
   protected readonly liquid = CHAPTER_LIQUID;
   protected readonly fontScale = CHAPTER_SCENE.fontSize / 0.62;
-  protected readonly debugEnabled = isDevMode() && CHAPTER_DEBUG;
+  protected readonly devButton = isDevMode() && CHAPTER_DEV_BUTTON;
+  protected readonly debugEnabled = signal<boolean>(isDevMode() && CHAPTER_DEBUG);
   protected readonly mouseCamera = signal(false);
   protected readonly showStats = signal<boolean>(CHAPTER_STATS.visible);
   protected readonly frameStats = signal<ReliefFrameStats | null>(null);
@@ -151,7 +153,7 @@ export class BlueprintWater {
   }
 
   protected changeView(key: (typeof CHAPTER_VIEW_SLIDERS)[number]['key'], event: Event): void {
-    if (!this.debugEnabled || !(event.target instanceof HTMLInputElement)) return;
+    if (!this.debugEnabled() || !(event.target instanceof HTMLInputElement)) return;
     const slider = this.viewSliders.find((entry) => entry.key === key);
     const value = event.target.valueAsNumber;
     if (!slider || !Number.isFinite(value) || value < slider.min || value > slider.max) {
@@ -162,35 +164,45 @@ export class BlueprintWater {
   }
 
   protected toggleProjection(): void {
-    if (this.debugEnabled) {
+    if (this.debugEnabled()) {
       this.applyView({ ...this.viewSettings(), orthographic: !this.viewSettings().orthographic });
     }
   }
 
   protected resetView(): void {
-    if (this.debugEnabled) this.applyView({ ...CHAPTER_VIEW });
+    if (this.debugEnabled()) this.applyView({ ...CHAPTER_VIEW });
   }
 
   protected toggleMouseCamera(): void {
-    if (!this.debugEnabled || this.mode() !== 'webgl') return;
+    if (!this.debugEnabled() || this.mode() !== 'webgl') return;
     this.mouseCamera.update((enabled) => !enabled);
     this.syncMouseCamera();
   }
 
   protected toggleLight(key: LightToggle): void {
-    if (this.debugEnabled) {
+    if (this.debugEnabled()) {
       this.applyView({ ...this.viewSettings(), [key]: !this.viewSettings()[key] });
     }
   }
 
+  protected toggleDevTools(): void {
+    if (!this.devButton) return;
+    this.debugEnabled.update((enabled) => !enabled);
+    if (!this.debugEnabled() && this.mouseCamera()) {
+      this.mouseCamera.set(false);
+      this.syncMouseCamera();
+    }
+    this.syncStats();
+  }
+
   protected toggleStats(): void {
-    if (!this.debugEnabled) return;
+    if (!this.debugEnabled()) return;
     this.showStats.update((visible) => !visible);
     this.syncStats();
   }
 
   private syncStats(): void {
-    const listen = this.debugEnabled && this.showStats() && this.mode() === 'webgl';
+    const listen = this.debugEnabled() && this.showStats() && this.mode() === 'webgl';
     if (!listen) this.frameStats.set(null);
     this.zone.runOutsideAngular(() =>
       this.scene?.setStatsListener(

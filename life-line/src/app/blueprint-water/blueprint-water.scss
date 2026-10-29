@@ -126,6 +126,26 @@ button:disabled {
   overflow: auto;
   font-size: 0.8rem;
 }
+.dev-toggle {
+  position: fixed;
+  z-index: 4;
+  top: 0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.3rem 0.8rem;
+  border: 1px solid #96958e;
+  background: #eeede9cc;
+  color: #1f1f1d;
+  font:
+    700 0.72rem/1 ui-monospace,
+    monospace;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+}
+.dev-toggle[aria-pressed='true'] {
+  background: #1f1f1d;
+  color: #9fe29a;
+}
 .frame-stats {
   position: fixed;
   z-index: 3;

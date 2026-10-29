@@ -92,9 +92,12 @@ Edit `src/app/blueprint-water/chapter.constants.ts`:
   rotation around Z (`planeRotationZ`, degrees), ambient light intensity/enabled, and
   both directional lights' XYZ positions and enabled flags. The surface lies in the XY plane; +Z
   points out of the ground.
-- `CHAPTER_DEBUG` (default `false`): master switch for the camera/light panel, FPS
-  overlay/sampling and expandable state JSON. Set it to `true` in a development build
-  to show these tools; they remain absent in production.
+- `CHAPTER_DEBUG` (default `false`): whether the camera/light panel, FPS overlay/sampling
+  and expandable state JSON start open in a development build. They remain absent in
+  production.
+- `CHAPTER_DEV_BUTTON` (default `true`): shows a **DEV** button at the top centre in
+  development builds that shows or hides those tools at runtime (turning them off also
+  stops FPS sampling and mouse camera controls).
 - `CHAPTER_STATS` (requires `CHAPTER_DEBUG`): the FPS overlay in the top-left corner. `visible` (shown on
   load; toggle with "Show FPS stats"), `sampleMs` (refresh/averaging window) and
   `slowFrameMs` (frames slower than this count as slow). The overlay shows FPS, average
@@ -123,7 +126,7 @@ The component also accepts a partial `[timings]` override. The same timing/pose
 helpers drive the GPU scene and the 2D preview's schedule. Reduced motion caps
 press and fill at 120ms each, skips the delays, and disables continuing ripples.
 
-With `CHAPTER_DEBUG = true` and `npm start` (Angular development mode), expand **Dev: camera & lights** at
+With `npm start` (Angular development mode), tap **DEV** at the top (or set `CHAPTER_DEBUG = true`), then expand **Dev: camera & lights** at
 the top-right of the scene. Toggle orthographic/perspective and use the live sliders
 for zoom, pan, yaw, tilt, roll, and key/fill light positions. Moving a light refreshes
 its shadows. Reset restores `CHAPTER_VIEW`; zoom remains capped to keep all text

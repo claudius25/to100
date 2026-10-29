@@ -64,7 +64,17 @@
     <p class="sr-only" role="status">{{ notice() }}</p>
   }
 </section>
-@if (debugEnabled) {
+@if (devButton) {
+  <button
+    type="button"
+    class="dev-toggle"
+    [attr.aria-pressed]="debugEnabled()"
+    (click)="toggleDevTools()"
+  >
+    DEV
+  </button>
+}
+@if (debugEnabled()) {
   @if (frameStats(); as stats) {
     <dl class="frame-stats" aria-label="Frame statistics">
       <div class="frame-stats__fps" [class.frame-stats--slow]="stats.fps < 50">

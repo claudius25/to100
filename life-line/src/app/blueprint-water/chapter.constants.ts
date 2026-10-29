@@ -338,8 +338,11 @@ export const CHAPTER_QUALITY = {
   shadowMapSize: 2048,
 } as const;
 
-/** Master switch for camera controls, FPS sampling and the state JSON (dev builds only). */
+/** Whether camera controls, FPS sampling and the state JSON start open (dev builds only). */
 export const CHAPTER_DEBUG = false;
+
+/** Show the top DEV button that toggles the dev tools at runtime (dev builds only). */
+export const CHAPTER_DEV_BUTTON = true;
 
 /** Dev-only frame statistics overlay. */
 export const CHAPTER_STATS = {
