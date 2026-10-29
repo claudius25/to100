@@ -125,10 +125,10 @@ export const CHAPTER_COLORS = {
 } as const;
 
 export const CHAPTER_TRAITS = [
-  { key: 'healthBlueprint', label: 'HEALTH:', color: CHAPTER_COLORS.health },
-  { key: 'familyFinances', label: 'FINANCE:', color: CHAPTER_COLORS.finance },
-  { key: 'emotionalResilience', label: 'EMOTIONS:', color: CHAPTER_COLORS.emotions },
-  { key: 'socialSkills', label: 'SOCIAL:', color: CHAPTER_COLORS.social },
+  { key: 'healthBlueprint', label: 'HEALTH', color: CHAPTER_COLORS.health },
+  { key: 'familyFinances', label: 'FINANCE', color: CHAPTER_COLORS.finance },
+  { key: 'emotionalResilience', label: 'EMOTIONS', color: CHAPTER_COLORS.emotions },
+  { key: 'socialSkills', label: 'SOCIAL', color: CHAPTER_COLORS.social },
 ] as const;
 
 export const CHAPTER_TEXT = {
@@ -137,7 +137,7 @@ export const CHAPTER_TEXT = {
   eyebrow: 'CHAPTER 1',
   title: 'The beginning of you.',
   recordTitle: 'The beginning of you',
-  nameLabel: 'NAME:',
+  nameLabel: 'NAME',
   valueSeparator: '. ',
   restart: 'Start over',
   begin: 'Begin life →',
@@ -165,7 +165,7 @@ export interface ChapterTimings {
 
 /** All durations are milliseconds; label, value and next-button motion run together. */
 export const CHAPTER_TIMINGS: Readonly<ChapterTimings> = {
-  pressMs: 240,
+  pressMs: 640,
   settleMs: 40,
 };
 export const CHAPTER_REDUCED_MOTION_MS = 120;
