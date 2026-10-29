@@ -11,6 +11,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { LandscapeViewport } from '../landscape-viewport/landscape-viewport';
 import { readBlueprintChapter, toHeroStartingState } from '../blueprint-water/hero-blueprint';
 import { GameEngine } from '../simulation/model/game-engine';
 import type { Step } from '../simulation/model/step';
@@ -18,7 +19,7 @@ import { TARGET_AGE_WEEKS } from '../simulation/model/types';
 
 @Component({
   selector: 'app-game',
-  imports: [JsonPipe, RouterLink],
+  imports: [JsonPipe, RouterLink, LandscapeViewport],
   templateUrl: './game.html',
   styleUrl: './game.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

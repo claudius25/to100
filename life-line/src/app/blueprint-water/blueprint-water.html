@@ -1,202 +1,204 @@
-<section
-  class="chapter"
-  [style.--fill-duration]="animationTimings().fillMs + 'ms'"
-  [style.--press-duration]="animationTimings().pressMs + 'ms'"
-  [style.--fill-delay]="animationTimings().pressMs + animationTimings().fillDelayMs + 'ms'"
-  [style.--surface]="colors.surface"
-  [style.--clear-liquid]="colors.clearLiquid"
-  [style.--dry-text]="colors.dryText"
-  [style.--liquid-opacity]="liquid.opacity"
-  [style.--clear-opacity]="liquid.clearOpacity"
-  [style.--font-scale]="fontScale"
->
-  <button
-    type="button"
-    class="scene"
-    [class.scene--busy]="busy()"
-    [disabled]="!mouseCamera() && (busy() || snapshot().stage === 'completed')"
-    [attr.aria-label]="hint()"
-    (click)="advance()"
+<app-landscape-viewport>
+  <section
+    class="chapter"
+    [style.--fill-duration]="animationTimings().fillMs + 'ms'"
+    [style.--press-duration]="animationTimings().pressMs + 'ms'"
+    [style.--fill-delay]="animationTimings().pressMs + animationTimings().fillDelayMs + 'ms'"
+    [style.--surface]="colors.surface"
+    [style.--clear-liquid]="colors.clearLiquid"
+    [style.--dry-text]="colors.dryText"
+    [style.--liquid-opacity]="liquid.opacity"
+    [style.--clear-opacity]="liquid.clearOpacity"
+    [style.--font-scale]="fontScale"
   >
-    <div #stage class="stage" [class.stage--camera]="mouseCamera()"></div>
-    @if (mode() === 'fallback') {
-      <div class="preview" aria-hidden="true">
-        @for (row of visualRows(); track row.label; let last = $last; let index = $index) {
-          <div class="preview__row">
-            <span
-              class="preview__label preview__recess"
-              [class.preview__pressing]="newLabel(index)"
-            >
-              {{ row.label }}
-            </span>
-            <span class="preview__value" [style.--liquid]="row.color">
+    <button
+      type="button"
+      class="scene"
+      [class.scene--busy]="busy()"
+      [disabled]="!mouseCamera() && (busy() || snapshot().stage === 'completed')"
+      [attr.aria-label]="hint()"
+      (click)="advance()"
+    >
+      <div #stage class="stage" [class.stage--camera]="mouseCamera()"></div>
+      @if (mode() === 'fallback') {
+        <div class="preview" aria-hidden="true">
+          @for (row of visualRows(); track row.label; let last = $last; let index = $index) {
+            <div class="preview__row">
               <span
-                class="preview__recess"
-                [class.preview__pressing]="last && !!row.value && snapshot().stage === 'filling'"
-                >{{ row.value }}</span
+                class="preview__label preview__recess"
+                [class.preview__pressing]="newLabel(index)"
               >
-              <span
-                class="preview__liquid"
-                [class.preview__liquid--filling]="
-                  last && !!row.value && snapshot().stage === 'filling'
-                "
-                >{{ row.value }}</span
-              >
-            </span>
-          </div>
-        }
-      </div>
-    }
-  </button>
+                {{ row.label }}
+              </span>
+              <span class="preview__value" [style.--liquid]="row.color">
+                <span
+                  class="preview__recess"
+                  [class.preview__pressing]="last && !!row.value && snapshot().stage === 'filling'"
+                  >{{ row.value }}</span
+                >
+                <span
+                  class="preview__liquid"
+                  [class.preview__liquid--filling]="
+                    last && !!row.value && snapshot().stage === 'filling'
+                  "
+                  >{{ row.value }}</span
+                >
+              </span>
+            </div>
+          }
+        </div>
+      }
+    </button>
 
-  <footer>
-    @if (result()) {
-      <button class="begin" type="button" [disabled]="navigating()" (click)="beginLife()">
-        {{ text.begin }}
+    <footer>
+      @if (result()) {
+        <button class="begin" type="button" [disabled]="navigating()" (click)="beginLife()">
+          {{ text.begin }}
+        </button>
+      }
+      @if (navigationError()) {
+        <p role="alert">{{ navigationError() }}</p>
+      }
+    </footer>
+    <p class="sr-only" role="status" aria-live="polite">{{ announcement() }}</p>
+    @if (notice()) {
+      <p class="sr-only" role="status">{{ notice() }}</p>
+    }
+  </section>
+  @if (devButton) {
+    <button
+      type="button"
+      class="dev-toggle"
+      [attr.aria-pressed]="debugEnabled()"
+      (click)="toggleDevTools()"
+    >
+      DEV
+    </button>
+  }
+  @if (debugEnabled()) {
+    @if (frameStats(); as stats) {
+      <dl class="frame-stats" aria-label="Frame statistics">
+        <div class="frame-stats__fps" [class.frame-stats--slow]="stats.fps < 50">
+          <dt>FPS</dt>
+          <dd>{{ stats.fps }}</dd>
+        </div>
+        <div>
+          <dt>Frame</dt>
+          <dd>
+            {{ stats.frameMs | number: '1.1-1' }} ms (worst
+            {{ stats.worstFrameMs | number: '1.0-0' }})
+          </dd>
+        </div>
+        <div>
+          <dt>Slow frames</dt>
+          <dd>{{ stats.slowFrames }}</dd>
+        </div>
+        <div>
+          <dt>CPU</dt>
+          <dd>{{ stats.cpuMs | number: '1.1-1' }} ms</dd>
+        </div>
+        <div>
+          <dt>Activity</dt>
+          <dd>{{ stats.activity }} · ×{{ stats.pixelRatio | number: '1.0-2' }}</dd>
+        </div>
+        <div>
+          <dt>Canvas</dt>
+          <dd>{{ stats.width }}×{{ stats.height }}</dd>
+        </div>
+        <div>
+          <dt>GI</dt>
+          <dd>{{ stats.globalIllumination }}</dd>
+        </div>
+        <div>
+          <dt>Draws</dt>
+          <dd>{{ stats.drawCalls }} · {{ stats.triangles | number }} tris</dd>
+        </div>
+      </dl>
+    }
+    <details class="scene-controls">
+      <summary>Dev: camera &amp; lights</summary>
+      <p>Changes are live. Copy the settings below into CHAPTER_VIEW to keep them.</p>
+      <p>Zoom is capped automatically to keep every chapter row in view.</p>
+      <button
+        class="reset"
+        type="button"
+        (click)="restart()"
+        [disabled]="mode() === 'loading' || navigating()"
+      >
+        {{ text.restart }}
       </button>
-    }
-    @if (navigationError()) {
-      <p role="alert">{{ navigationError() }}</p>
-    }
-  </footer>
-  <p class="sr-only" role="status" aria-live="polite">{{ announcement() }}</p>
-  @if (notice()) {
-    <p class="sr-only" role="status">{{ notice() }}</p>
-  }
-</section>
-@if (devButton) {
-  <button
-    type="button"
-    class="dev-toggle"
-    [attr.aria-pressed]="debugEnabled()"
-    (click)="toggleDevTools()"
-  >
-    DEV
-  </button>
-}
-@if (debugEnabled()) {
-  @if (frameStats(); as stats) {
-    <dl class="frame-stats" aria-label="Frame statistics">
-      <div class="frame-stats__fps" [class.frame-stats--slow]="stats.fps < 50">
-        <dt>FPS</dt>
-        <dd>{{ stats.fps }}</dd>
-      </div>
-      <div>
-        <dt>Frame</dt>
-        <dd>
-          {{ stats.frameMs | number: '1.1-1' }} ms (worst
-          {{ stats.worstFrameMs | number: '1.0-0' }})
-        </dd>
-      </div>
-      <div>
-        <dt>Slow frames</dt>
-        <dd>{{ stats.slowFrames }}</dd>
-      </div>
-      <div>
-        <dt>CPU</dt>
-        <dd>{{ stats.cpuMs | number: '1.1-1' }} ms</dd>
-      </div>
-      <div>
-        <dt>Activity</dt>
-        <dd>{{ stats.activity }} · ×{{ stats.pixelRatio | number: '1.0-2' }}</dd>
-      </div>
-      <div>
-        <dt>Canvas</dt>
-        <dd>{{ stats.width }}×{{ stats.height }}</dd>
-      </div>
-      <div>
-        <dt>GI</dt>
-        <dd>{{ stats.globalIllumination }}</dd>
-      </div>
-      <div>
-        <dt>Draws</dt>
-        <dd>{{ stats.drawCalls }} · {{ stats.triangles | number }} tris</dd>
-      </div>
-    </dl>
-  }
-  <details class="scene-controls">
-    <summary>Dev: camera &amp; lights</summary>
-    <p>Changes are live. Copy the settings below into CHAPTER_VIEW to keep them.</p>
-    <p>Zoom is capped automatically to keep every chapter row in view.</p>
-    <button
-      class="reset"
-      type="button"
-      (click)="restart()"
-      [disabled]="mode() === 'loading' || navigating()"
-    >
-      {{ text.restart }}
-    </button>
-    @if (mode() !== 'webgl') {
-      <p role="status">Camera and lights require the 3D renderer; the 2D preview is unchanged.</p>
-    }
-    <label class="control-toggle">
-      <input
-        type="checkbox"
-        [checked]="showStats()"
-        (change)="toggleStats()"
+      @if (mode() !== 'webgl') {
+        <p role="status">Camera and lights require the 3D renderer; the 2D preview is unchanged.</p>
+      }
+      <label class="control-toggle">
+        <input
+          type="checkbox"
+          [checked]="showStats()"
+          (change)="toggleStats()"
+          [disabled]="mode() !== 'webgl'"
+        />
+        Show FPS stats
+      </label>
+      <label class="control-toggle">
+        <input
+          type="checkbox"
+          [checked]="mouseCamera()"
+          (change)="toggleMouseCamera()"
+          [disabled]="mode() !== 'webgl'"
+        />
+        Mouse camera controls
+      </label>
+      @if (mouseCamera()) {
+        <p>
+          Left-drag to rotate. Right-drag, middle-drag or Shift-drag to pan. Scroll to zoom. Disable
+          mouse controls to reveal the next row.
+        </p>
+      }
+      <button
+        type="button"
+        [attr.aria-pressed]="viewSettings().orthographic"
+        (click)="toggleProjection()"
         [disabled]="mode() !== 'webgl'"
-      />
-      Show FPS stats
-    </label>
-    <label class="control-toggle">
-      <input
-        type="checkbox"
-        [checked]="mouseCamera()"
-        (change)="toggleMouseCamera()"
-        [disabled]="mode() !== 'webgl'"
-      />
-      Mouse camera controls
-    </label>
-    @if (mouseCamera()) {
-      <p>
-        Left-drag to rotate. Right-drag, middle-drag or Shift-drag to pan. Scroll to zoom. Disable
-        mouse controls to reveal the next row.
-      </p>
-    }
-    <button
-      type="button"
-      [attr.aria-pressed]="viewSettings().orthographic"
-      (click)="toggleProjection()"
-      [disabled]="mode() !== 'webgl'"
-    >
-      Orthographic {{ viewSettings().orthographic ? 'on' : 'off (perspective)' }}
-    </button>
-    <button type="button" (click)="resetView()">Reset camera &amp; lights</button>
-    @for (group of viewGroups; track group) {
-      <fieldset [disabled]="mode() !== 'webgl'">
-        <legend>{{ group }}</legend>
-        @if (lightToggles[group]; as toggle) {
-          <label class="control-toggle">
-            <input
-              type="checkbox"
-              [checked]="viewSettings()[toggle]"
-              (change)="toggleLight(toggle)"
-            />
-            {{ group }} enabled
-          </label>
-        }
-        @for (slider of viewSliders; track slider.key) {
-          @if (slider.group === group) {
-            <label>
-              <span>{{ slider.label }}: {{ viewSettings()[slider.key] }}</span>
+      >
+        Orthographic {{ viewSettings().orthographic ? 'on' : 'off (perspective)' }}
+      </button>
+      <button type="button" (click)="resetView()">Reset camera &amp; lights</button>
+      @for (group of viewGroups; track group) {
+        <fieldset [disabled]="mode() !== 'webgl'">
+          <legend>{{ group }}</legend>
+          @if (lightToggles[group]; as toggle) {
+            <label class="control-toggle">
               <input
-                type="range"
-                [attr.data-setting]="slider.key"
-                [min]="slider.min"
-                [max]="slider.max"
-                [step]="slider.step"
-                [value]="viewSettings()[slider.key]"
-                (input)="changeView(slider.key, $event)"
+                type="checkbox"
+                [checked]="viewSettings()[toggle]"
+                (change)="toggleLight(toggle)"
               />
+              {{ group }} enabled
             </label>
           }
-        }
-      </fieldset>
-    }
-    <pre>{{ viewSettings() | json }}</pre>
-  </details>
-  <details class="debug">
-    <summary>{{ text.debug }}</summary>
-    <pre>{{ { reveal: snapshot(), result: result() } | json }}</pre>
-  </details>
-}
+          @for (slider of viewSliders; track slider.key) {
+            @if (slider.group === group) {
+              <label>
+                <span>{{ slider.label }}: {{ viewSettings()[slider.key] }}</span>
+                <input
+                  type="range"
+                  [attr.data-setting]="slider.key"
+                  [min]="slider.min"
+                  [max]="slider.max"
+                  [step]="slider.step"
+                  [value]="viewSettings()[slider.key]"
+                  (input)="changeView(slider.key, $event)"
+                />
+              </label>
+            }
+          }
+        </fieldset>
+      }
+      <pre>{{ viewSettings() | json }}</pre>
+    </details>
+    <details class="debug">
+      <summary>{{ text.debug }}</summary>
+      <pre>{{ { reveal: snapshot(), result: result() } | json }}</pre>
+    </details>
+  }
+</app-landscape-viewport>

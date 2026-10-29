@@ -4,6 +4,7 @@
 }
 
 .game {
+  height: 100%;
   color: #e8e7e5;
 }
 
@@ -17,8 +18,7 @@
 .landscape {
   position: relative;
   isolation: isolate;
-  height: 100svh;
-  min-height: 620px;
+  height: 100%;
   overflow: hidden;
   color: #25272c;
   container-type: inline-size;
@@ -75,7 +75,9 @@
 
 .hud {
   position: absolute;
-  inset: 2rem 2.5rem auto;
+  top: max(3.5rem, calc(env(safe-area-inset-top) + 3rem));
+  left: max(2.5rem, env(safe-area-inset-left));
+  right: max(2.5rem, env(safe-area-inset-right));
   display: flex;
   justify-content: space-between;
   gap: 1rem;
@@ -409,8 +411,8 @@ a {
 
 .scene-footer {
   position: absolute;
-  bottom: 3rem;
-  left: 2.5rem;
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  left: max(2.5rem, env(safe-area-inset-left));
   display: flex;
   align-items: center;
   gap: 1.5rem;
@@ -433,9 +435,22 @@ a {
 }
 
 .game-details {
+  position: absolute;
+  z-index: 4;
+  top: max(3.75rem, calc(env(safe-area-inset-top) + 3rem));
+  right: max(1rem, env(safe-area-inset-right));
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  left: max(1rem, env(safe-area-inset-left));
   max-width: 1000px;
-  margin: auto;
-  padding: 2rem 1.5rem 3rem;
+  margin: 0 auto;
+  padding: 1rem;
+  overflow: auto;
+  background: #101112f5;
+  border: 1px solid #343438;
+}
+
+.game-details:not([open]) {
+  display: none;
 }
 
 .encounter-dialog {
@@ -514,7 +529,8 @@ pre {
 
 @media (max-width: 600px) {
   .hud {
-    inset: 1.25rem 1rem auto;
+    left: max(1rem, env(safe-area-inset-left));
+    right: max(1rem, env(safe-area-inset-right));
   }
   .hud__resources {
     gap: 1rem;
@@ -561,6 +577,56 @@ pre {
   .game__columns {
     grid-template-columns: 1fr;
     gap: 0;
+  }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .hud {
+    top: max(0.75rem, env(safe-area-inset-top));
+    right: max(9rem, calc(env(safe-area-inset-right) + 8rem));
+  }
+  .hud__resources {
+    font-size: 1rem;
+  }
+  .hud svg {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+  .hud__secondary,
+  .age {
+    margin-top: 0.2rem;
+  }
+  .encounter-message {
+    top: 21%;
+  }
+  h1 {
+    font-size: 1.4rem;
+    margin: 0.25rem 0;
+  }
+  .encounter-message > p:not(.eyebrow) {
+    margin: 0.25rem 0;
+    font-size: 0.75rem;
+  }
+  .encounter-message .changes {
+    font-size: 0.65rem;
+  }
+  .die {
+    width: 36px;
+    height: 36px;
+  }
+  .dice-control {
+    bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+  .roll-label {
+    margin-top: 0.15rem;
+  }
+  .dice {
+    font-size: 0.9rem;
+  }
+  .step-icon {
+    width: 22px;
+    height: 22px;
+    margin-top: 1rem;
   }
 }
 

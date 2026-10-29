@@ -68,9 +68,13 @@ describe('GamePage', () => {
     );
     await harness.navigateByUrl('/game', GamePage);
     expect(harness.routeNativeElement?.textContent).toContain('TO100');
-    expect(
-      harness.routeNativeElement?.querySelector('.scene-footer a:last-child')?.getAttribute('href'),
-    ).toBe('/game#game-details');
+    const details = harness.routeNativeElement!.querySelector<HTMLDetailsElement>('.game-details')!;
+    expect(details.open).toBe(false);
+    harness
+      .routeNativeElement!.querySelector<HTMLButtonElement>('.scene-footer button:last-child')!
+      .click();
+    harness.detectChanges();
+    expect(details.open).toBe(true);
   });
 
   it('renders the model, delegates rolls, and keeps JSON and upcoming encounters synchronized', async () => {

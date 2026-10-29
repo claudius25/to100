@@ -25,7 +25,7 @@ settings shorten both slides but keep the 800ms pause to read the dice result.
 Hover or focus a step for its encounter details. Money, energy, health, mood, and age
 remain visible above the horizon, with the resolved encounter shown in the sky.
 
-Use **State & debug** below the scene for blueprint, inventory, journey log, and
+Use **State & debug** to open an overlay for blueprint, inventory, journey log, and
 **Debug: current state JSON**. JSON reflects the engine immediately after each roll
 or reset, even while the previous board is being used for the presentation-only
 slide. The texture and silhouette are local SVG artwork; no Three.js is used here.
@@ -36,6 +36,24 @@ hero's name, mapped blueprint, and Chapter 1 record instead. New game resets the
 journey while retaining that origin, if present. Reloading restarts the journey;
 the origin remains in that browser history entry, but turns are not saved.
 The older `/starting-blueprint` tower remains a separate prototype.
+
+### Full-viewport landscape layout
+
+Both `/game` and `/blueprint-water` fill the available viewport, including after
+resizing or rotating the device. Controls and debugging panels overlay the scene;
+they do not reserve space below it or create a scrolling page. Scroll inside an
+open debug panel instead. Controls account for device safe-area insets.
+
+On portrait touch devices, a **Rotate your phone** screen blocks interaction until
+the device is landscape. It does not reset the chapter or game. Turn off the device's
+rotation lock if necessary. Desktop portrait windows remain usable.
+
+Where supported, **Fullscreen** requests fullscreen from a user tap, then attempts
+to lock touch devices to landscape. Orientation locking is browser-dependent and
+usually requires fullscreen; it cannot be guaranteed on iPhones or other browsers
+without the required APIs. Unsupported or rejected requests show manual-rotation
+guidance. Fullscreen is optional: manually rotating still works in the normal browser.
+Exiting fullscreen releases any orientation lock acquired by the page.
 
 ## Liquid blueprint / Chapter 1
 
@@ -57,8 +75,9 @@ Labels are dry, right-aligned recesses; values share a separate left-aligned
 column with a fixed gap. Existing rows remain visible. Each result is sampled once;
 filling locks further taps. Start over cancels pending work and clears the surface.
 The scene button is keyboard-accessible and a live region announces the results.
-The normal chapter UI contains only the tappable scene and, after completion, the
-**Begin life** button. Tap instructions and row announcements remain available to
+The chapter UI contains the tappable scene, a **Fullscreen** control where supported,
+the optional **DEV** button and, after completion, the **Begin life** button, all
+overlaid on the scene. Tap instructions and row announcements remain available to
 screen readers. Navigation failures are still shown as alerts.
 
 New letters do not pop into full-depth holes: their floors begin flush with the

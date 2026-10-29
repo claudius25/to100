@@ -1,410 +1,429 @@
-<main class="game">
-  <svg class="symbol-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <defs>
-      <symbol id="icon-coins" viewBox="0 0 64 64">
-        <ellipse cx="30" cy="17" rx="18" ry="8" fill="currentColor" />
-        <path
-          d="M12 23q18 14 36 0v8q-18 15-36 0zm0 14q18 14 36 0v8q-18 15-36 0z"
-          fill="currentColor"
-        />
-      </symbol>
-      <symbol id="icon-battery" viewBox="0 0 64 64">
-        <rect
-          x="5"
-          y="17"
-          width="49"
-          height="29"
-          rx="3"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="3"
-        />
-        <path d="M58 25v13" stroke="currentColor" stroke-width="5" />
-        <path d="M10 22h37v19H10z" fill="currentColor" opacity=".8" />
-      </symbol>
-      <symbol id="icon-bag" viewBox="0 0 64 64">
-        <path d="M20 24v-8a12 12 0 0 1 24 0v8" fill="none" stroke="currentColor" stroke-width="5" />
-        <path d="M12 23h40l7 31q1 7-7 7H12q-8 0-7-7z" fill="currentColor" />
-        <circle cx="32" cy="40" r="5" fill="#141414" />
-      </symbol>
-      <symbol id="icon-apple" viewBox="0 0 64 64">
-        <path
-          d="M32 19Q20 11 9 23T14 55q8 11 18 5 12 6 20-6 15-25 1-34-9-5-21-1M33 14Q34 1 51 1q-2 14-18 13"
-          fill="currentColor"
-        />
-        <path d="m31 21-2-12" stroke="currentColor" stroke-width="3" />
-      </symbol>
-      <symbol id="icon-warning" viewBox="0 0 64 64">
-        <path d="M27 8q5-9 10 0l26 44q4 8-5 8H6q-8 0-4-8z" fill="currentColor" />
-        <path d="M32 23v17" stroke="#151515" stroke-width="6" stroke-linecap="round" />
-        <circle cx="32" cy="50" r="3.5" fill="#151515" />
-      </symbol>
-      <symbol id="icon-book" viewBox="0 0 64 64">
-        <path d="M3 9q15-7 27 1v47Q17 49 3 55zm58 0q-15-7-27 1v47q13-8 27-2z" fill="currentColor" />
-        <path
-          d="M10 23h12m-12 9h12m20-9h12m-12 9h12"
-          stroke="#20252b"
-          stroke-width="4"
-          stroke-linecap="round"
-        />
-      </symbol>
-      <symbol id="icon-heart" viewBox="0 0 64 64">
-        <path d="M32 60 7 36C-12 15 15-4 32 14 49-4 76 15 57 36z" fill="currentColor" />
-        <path d="M28 23h8v9h9v8h-9v9h-8v-9h-9v-8h9z" fill="#162020" />
-      </symbol>
-      <symbol id="icon-illness" viewBox="0 0 64 64">
-        <g stroke="currentColor" stroke-width="6" stroke-linecap="round">
-          <path d="M32 5v54M5 32h54M13 13l38 38M13 51l38-38" />
-          <path d="M28 4h8m-8 56h8M4 28v8m56-8v8" />
-        </g>
-        <circle cx="32" cy="32" r="20" fill="currentColor" />
-        <g fill="#282020">
-          <circle cx="25" cy="27" r="4" />
-          <circle cx="41" cy="31" r="3" />
-          <circle cx="29" cy="41" r="3.5" />
-        </g>
-      </symbol>
-      <symbol id="icon-quiet" viewBox="0 0 64 64">
-        <circle cx="32" cy="32" r="2" fill="currentColor" />
-      </symbol>
-    </defs>
-  </svg>
+<app-landscape-viewport>
+  <main class="game">
+    <svg class="symbol-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <symbol id="icon-coins" viewBox="0 0 64 64">
+          <ellipse cx="30" cy="17" rx="18" ry="8" fill="currentColor" />
+          <path
+            d="M12 23q18 14 36 0v8q-18 15-36 0zm0 14q18 14 36 0v8q-18 15-36 0z"
+            fill="currentColor"
+          />
+        </symbol>
+        <symbol id="icon-battery" viewBox="0 0 64 64">
+          <rect
+            x="5"
+            y="17"
+            width="49"
+            height="29"
+            rx="3"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="3"
+          />
+          <path d="M58 25v13" stroke="currentColor" stroke-width="5" />
+          <path d="M10 22h37v19H10z" fill="currentColor" opacity=".8" />
+        </symbol>
+        <symbol id="icon-bag" viewBox="0 0 64 64">
+          <path
+            d="M20 24v-8a12 12 0 0 1 24 0v8"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="5"
+          />
+          <path d="M12 23h40l7 31q1 7-7 7H12q-8 0-7-7z" fill="currentColor" />
+          <circle cx="32" cy="40" r="5" fill="#141414" />
+        </symbol>
+        <symbol id="icon-apple" viewBox="0 0 64 64">
+          <path
+            d="M32 19Q20 11 9 23T14 55q8 11 18 5 12 6 20-6 15-25 1-34-9-5-21-1M33 14Q34 1 51 1q-2 14-18 13"
+            fill="currentColor"
+          />
+          <path d="m31 21-2-12" stroke="currentColor" stroke-width="3" />
+        </symbol>
+        <symbol id="icon-warning" viewBox="0 0 64 64">
+          <path d="M27 8q5-9 10 0l26 44q4 8-5 8H6q-8 0-4-8z" fill="currentColor" />
+          <path d="M32 23v17" stroke="#151515" stroke-width="6" stroke-linecap="round" />
+          <circle cx="32" cy="50" r="3.5" fill="#151515" />
+        </symbol>
+        <symbol id="icon-book" viewBox="0 0 64 64">
+          <path
+            d="M3 9q15-7 27 1v47Q17 49 3 55zm58 0q-15-7-27 1v47q13-8 27-2z"
+            fill="currentColor"
+          />
+          <path
+            d="M10 23h12m-12 9h12m20-9h12m-12 9h12"
+            stroke="#20252b"
+            stroke-width="4"
+            stroke-linecap="round"
+          />
+        </symbol>
+        <symbol id="icon-heart" viewBox="0 0 64 64">
+          <path d="M32 60 7 36C-12 15 15-4 32 14 49-4 76 15 57 36z" fill="currentColor" />
+          <path d="M28 23h8v9h9v8h-9v9h-8v-9h-9v-8h9z" fill="#162020" />
+        </symbol>
+        <symbol id="icon-illness" viewBox="0 0 64 64">
+          <g stroke="currentColor" stroke-width="6" stroke-linecap="round">
+            <path d="M32 5v54M5 32h54M13 13l38 38M13 51l38-38" />
+            <path d="M28 4h8m-8 56h8M4 28v8m56-8v8" />
+          </g>
+          <circle cx="32" cy="32" r="20" fill="currentColor" />
+          <g fill="#282020">
+            <circle cx="25" cy="27" r="4" />
+            <circle cx="41" cy="31" r="3" />
+            <circle cx="29" cy="41" r="3.5" />
+          </g>
+        </symbol>
+        <symbol id="icon-quiet" viewBox="0 0 64 64">
+          <circle cx="32" cy="32" r="2" fill="currentColor" />
+        </symbol>
+      </defs>
+    </svg>
 
-  <section class="landscape" aria-label="TO100 life journey" [class.landscape--sliding]="sliding()">
-    <header class="hud">
-      <div>
-        <div class="hud__resources">
-          <span aria-label="Personal money">
-            <svg aria-hidden="true"><use href="#icon-coins" /></svg>
-            {{ state().hero.resources.money }}
-          </span>
-          <span aria-label="Energy">
-            <svg aria-hidden="true"><use href="#icon-battery" /></svg>
-            {{ state().hero.condition.energy }}%
-          </span>
+    <section
+      class="landscape"
+      aria-label="TO100 life journey"
+      [class.landscape--sliding]="sliding()"
+    >
+      <header class="hud">
+        <div>
+          <div class="hud__resources">
+            <span aria-label="Personal money">
+              <svg aria-hidden="true"><use href="#icon-coins" /></svg>
+              {{ state().hero.resources.money }}
+            </span>
+            <span aria-label="Energy">
+              <svg aria-hidden="true"><use href="#icon-battery" /></svg>
+              {{ state().hero.condition.energy }}%
+            </span>
+          </div>
+          <div class="hud__secondary">
+            <span>Health {{ state().hero.condition.health }}</span>
+            <span>Mood {{ state().hero.condition.mood }}</span>
+          </div>
         </div>
-        <div class="hud__secondary">
-          <span>Health {{ state().hero.condition.health }}</span>
-          <span>Mood {{ state().hero.condition.mood }}</span>
+        <div class="hud__age">
+          <span>{{ state().hero.ageYears }}<span class="hud__target">/100</span></span>
+          <span class="age"
+            >{{ state().hero.ageYears }} years, {{ state().hero.ageRemainingWeeks }} weeks</span
+          >
+          <progress
+            class="sr-only"
+            aria-label="Journey to 100"
+            [value]="state().hero.ageWeeks"
+            [max]="targetAgeWeeks"
+          ></progress>
         </div>
-      </div>
-      <div class="hud__age">
-        <span>{{ state().hero.ageYears }}<span class="hud__target">/100</span></span>
-        <span class="age"
-          >{{ state().hero.ageYears }} years, {{ state().hero.ageRemainingWeeks }} weeks</span
-        >
-        <progress
-          class="sr-only"
-          aria-label="Journey to 100"
-          [value]="state().hero.ageWeeks"
-          [max]="targetAgeWeeks"
-        ></progress>
-      </div>
-    </header>
+      </header>
 
-    <div class="encounter-message turn" aria-live="polite">
-      @if (lastTurn(); as turn) {
-        @if (turn.resolvedStep; as step) {
-          <p class="eyebrow">
-            Turn {{ turn.turnNumber }} &middot;
-            {{ step.eventCategory ?? step.itemBehavior ?? 'a little stillness' }}
-          </p>
-          <h1>{{ step.title }}</h1>
-          <p>{{ step.description }}</p>
-          <p class="changes">
-            Health {{ turn.appliedChanges.health }} &middot; Energy
-            {{ turn.appliedChanges.energy }} &middot; Mood {{ turn.appliedChanges.mood }} &middot;
-            Money {{ turn.appliedChanges.money }}
-          </p>
-          @if (step.itemBehavior === 'collectible') {
-            <p class="changes">Kept in your inventory; effects have not been applied.</p>
+      <div class="encounter-message turn" aria-live="polite">
+        @if (lastTurn(); as turn) {
+          @if (turn.resolvedStep; as step) {
+            <p class="eyebrow">
+              Turn {{ turn.turnNumber }} &middot;
+              {{ step.eventCategory ?? step.itemBehavior ?? 'a little stillness' }}
+            </p>
+            <h1>{{ step.title }}</h1>
+            <p>{{ step.description }}</p>
+            <p class="changes">
+              Health {{ turn.appliedChanges.health }} &middot; Energy
+              {{ turn.appliedChanges.energy }} &middot; Mood {{ turn.appliedChanges.mood }} &middot;
+              Money {{ turn.appliedChanges.money }}
+            </p>
+            @if (step.itemBehavior === 'collectible') {
+              <p class="changes">Kept in your inventory; effects have not been applied.</p>
+            }
+          } @else {
+            <p class="eyebrow">Journey complete</p>
+            <h1>You reached 100!</h1>
+            <p>A whole lifetime, one little step at a time.</p>
           }
         } @else {
-          <p class="eyebrow">Journey complete</p>
-          <h1>You reached 100!</h1>
-          <p>A whole lifetime, one little step at a time.</p>
+          <p class="eyebrow">TO100 &middot; a life waiting to unfold</p>
+          <h1>Every journey starts small.</h1>
+          <p>Roll the dice. Take your first steps.</p>
         }
-      } @else {
-        <p class="eyebrow">TO100 &middot; a life waiting to unfold</p>
-        <h1>Every journey starts small.</h1>
-        <p>Roll the dice. Take your first steps.</p>
-      }
-    </div>
+      </div>
 
-    <div
-      class="world"
-      [class.world--scrolling]="phase() === 'scrolling'"
-      [style.--scroll-distance]="-scrollDistance() + '%'"
-      [style.--texture-offset]="cameraWeeks() * -7 + 'cqw'"
-      (animationend)="finishScroll($event)"
-    >
-      <div class="sky" aria-hidden="true"></div>
-      <div class="ground" aria-hidden="true"></div>
       <div
-        class="hero"
-        [class.hero--sliding]="sliding()"
-        [class.hero--landed]="phase() === 'encounter' || phase() === 'scrolling'"
-        [class.hero--finished]="state().status === 'completed' && phase() === 'ready'"
-        [style.--landing-position]="landingPosition() + '%'"
-        (animationend)="finishSlide($event)"
-        role="img"
-        [attr.aria-label]="
-          sliding()
-            ? 'Baby sliding to the landing step'
-            : state().status === 'completed'
-              ? 'Baby at the 100-year finish flag'
-              : phase() === 'encounter' || phase() === 'scrolling'
-                ? 'Baby at the landing step'
-                : 'Baby at the start of the next roll'
-        "
+        class="world"
+        [class.world--scrolling]="phase() === 'scrolling'"
+        [style.--scroll-distance]="-scrollDistance() + '%'"
+        [style.--texture-offset]="cameraWeeks() * -7 + 'cqw'"
+        (animationend)="finishScroll($event)"
       >
-        <svg viewBox="0 0 100 65" aria-hidden="true">
-          <g fill="currentColor">
-            <circle cx="76" cy="17" r="12" />
-            <ellipse cx="80" cy="8" rx="7" ry="5" />
-            <path d="M69 27q-4 12-17 13L32 44q-14 2-17-7 0-12 15-13l26-4z" />
-            <path d="m62 30 9 21 16 6q5 6-3 6l-19-5-15-21zM35 39 24 54 7 56q-8 6 0 8l23-3 17-17z" />
-            <path d="m44 39 5 14 12 6q4 5-3 5l-17-6-9-14z" />
-          </g>
-        </svg>
-      </div>
-
-      <div class="finish-flag" aria-label="Target: 100 years">
-        <svg viewBox="0 0 48 68" aria-hidden="true">
-          <path d="M7 66V3" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
-          <path d="M9 5 46 22 9 39z" fill="currentColor" />
-          <text x="15" y="26" fill="#fff" font-size="12" font-family="sans-serif">100</text>
-        </svg>
-      </div>
-
-      @if (state().status === 'playing' || busy()) {
-        <section class="board" aria-labelledby="upcoming-heading">
-          <h2 class="sr-only" id="upcoming-heading">Next roll: possible encounters</h2>
-          <ol class="encounters">
-            @for (step of displayedSteps(); track step.id; let offset = $index) {
-              <li
-                class="encounter"
-                [attr.data-step-id]="step.id"
-                [style.left.%]="(offset * 100) / 12"
-                tabindex="0"
-                [attr.aria-label]="
-                  'Offset ' +
-                  (offset + 1) +
-                  ': ' +
-                  step.title +
-                  '. ' +
-                  step.description +
-                  (offset === 0 ? ' Unreachable with two dice.' : '')
-                "
-                [class.encounter--unreachable]="offset === 0"
-                [class.encounter--landing]="
-                  busy() && state().status === 'playing' && lastTurn()?.diceSum === offset + 1
-                "
-              >
-                @if (offset !== 0) {
-                  <span class="step-number">{{ offset + 1 }}</span>
-                }
-                @if (step.kind !== 'empty') {
-                  <svg
-                    class="step-icon"
-                    [class]="'step-icon step-icon--' + encounterIcon(step)"
-                    aria-hidden="true"
-                  >
-                    <use [attr.href]="'#icon-' + encounterIcon(step)" />
-                  </svg>
-                }
-                <div class="step-tooltip">
-                  <strong>{{ step.title }}</strong>
-                  <span>{{ step.description }}</span>
-                  @if (offset === 0) {
-                    <span>Offset 1 is unreachable with two dice.</span>
-                  }
-                </div>
-              </li>
-            }
-          </ol>
-        </section>
-      }
-    </div>
-
-    <div class="dice-control">
-      <button
-        class="roll-button"
-        #rollButton
-        type="button"
-        aria-label="Roll dice"
-        [disabled]="busy() || state().status === 'completed'"
-        (click)="rollDice()"
-      >
-        <span class="dice-pair" aria-hidden="true">
-          @for (value of lastTurn()?.dice ?? [1, 1]; track $index) {
-            <svg class="die" viewBox="0 0 64 64">
+        <div class="sky" aria-hidden="true"></div>
+        <div class="ground" aria-hidden="true"></div>
+        <div
+          class="hero"
+          [class.hero--sliding]="sliding()"
+          [class.hero--landed]="phase() === 'encounter' || phase() === 'scrolling'"
+          [class.hero--finished]="state().status === 'completed' && phase() === 'ready'"
+          [style.--landing-position]="landingPosition() + '%'"
+          (animationend)="finishSlide($event)"
+          role="img"
+          [attr.aria-label]="
+            sliding()
+              ? 'Baby sliding to the landing step'
+              : state().status === 'completed'
+                ? 'Baby at the 100-year finish flag'
+                : phase() === 'encounter' || phase() === 'scrolling'
+                  ? 'Baby at the landing step'
+                  : 'Baby at the start of the next roll'
+          "
+        >
+          <svg viewBox="0 0 100 65" aria-hidden="true">
+            <g fill="currentColor">
+              <circle cx="76" cy="17" r="12" />
+              <ellipse cx="80" cy="8" rx="7" ry="5" />
+              <path d="M69 27q-4 12-17 13L32 44q-14 2-17-7 0-12 15-13l26-4z" />
               <path
-                d="m6 3 54 1 1 55-57 2z"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.5"
-                stroke-linejoin="round"
+                d="m62 30 9 21 16 6q5 6-3 6l-19-5-15-21zM35 39 24 54 7 56q-8 6 0 8l23-3 17-17z"
               />
-              @for (pip of diceFaces[value]; track pip) {
-                <circle
-                  [attr.cx]="17 + (pip % 3) * 15"
-                  [attr.cy]="17 + ((pip - (pip % 3)) / 3) * 15"
-                  r="5"
-                  fill="currentColor"
-                />
+              <path d="m44 39 5 14 12 6q4 5-3 5l-17-6-9-14z" />
+            </g>
+          </svg>
+        </div>
+
+        <div class="finish-flag" aria-label="Target: 100 years">
+          <svg viewBox="0 0 48 68" aria-hidden="true">
+            <path d="M7 66V3" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+            <path d="M9 5 46 22 9 39z" fill="currentColor" />
+            <text x="15" y="26" fill="#fff" font-size="12" font-family="sans-serif">100</text>
+          </svg>
+        </div>
+
+        @if (state().status === 'playing' || busy()) {
+          <section class="board" aria-labelledby="upcoming-heading">
+            <h2 class="sr-only" id="upcoming-heading">Next roll: possible encounters</h2>
+            <ol class="encounters">
+              @for (step of displayedSteps(); track step.id; let offset = $index) {
+                <li
+                  class="encounter"
+                  [attr.data-step-id]="step.id"
+                  [style.left.%]="(offset * 100) / 12"
+                  tabindex="0"
+                  [attr.aria-label]="
+                    'Offset ' +
+                    (offset + 1) +
+                    ': ' +
+                    step.title +
+                    '. ' +
+                    step.description +
+                    (offset === 0 ? ' Unreachable with two dice.' : '')
+                  "
+                  [class.encounter--unreachable]="offset === 0"
+                  [class.encounter--landing]="
+                    busy() && state().status === 'playing' && lastTurn()?.diceSum === offset + 1
+                  "
+                >
+                  @if (offset !== 0) {
+                    <span class="step-number">{{ offset + 1 }}</span>
+                  }
+                  @if (step.kind !== 'empty') {
+                    <svg
+                      class="step-icon"
+                      [class]="'step-icon step-icon--' + encounterIcon(step)"
+                      aria-hidden="true"
+                    >
+                      <use [attr.href]="'#icon-' + encounterIcon(step)" />
+                    </svg>
+                  }
+                  <div class="step-tooltip">
+                    <strong>{{ step.title }}</strong>
+                    <span>{{ step.description }}</span>
+                    @if (offset === 0) {
+                      <span>Offset 1 is unreachable with two dice.</span>
+                    }
+                  </div>
+                </li>
               }
-            </svg>
-          }
-        </span>
-        <span class="roll-label">
-          @if (state().status === 'completed') {
-            A lifetime complete
-          } @else if (sliding()) {
-            Sliding to step {{ lastTurn()?.diceSum }}
-          } @else if (phase() === 'encounter') {
-            Your encounter
-          } @else if (phase() === 'scrolling') {
-            Onward
-          } @else {
-            Roll dice
-          }
-        </span>
-      </button>
+            </ol>
+          </section>
+        }
+      </div>
+
+      <div class="dice-control">
+        <button
+          class="roll-button"
+          #rollButton
+          type="button"
+          aria-label="Roll dice"
+          [disabled]="busy() || state().status === 'completed'"
+          (click)="rollDice()"
+        >
+          <span class="dice-pair" aria-hidden="true">
+            @for (value of lastTurn()?.dice ?? [1, 1]; track $index) {
+              <svg class="die" viewBox="0 0 64 64">
+                <path
+                  d="m6 3 54 1 1 55-57 2z"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linejoin="round"
+                />
+                @for (pip of diceFaces[value]; track pip) {
+                  <circle
+                    [attr.cx]="17 + (pip % 3) * 15"
+                    [attr.cy]="17 + ((pip - (pip % 3)) / 3) * 15"
+                    r="5"
+                    fill="currentColor"
+                  />
+                }
+              </svg>
+            }
+          </span>
+          <span class="roll-label">
+            @if (state().status === 'completed') {
+              A lifetime complete
+            } @else if (sliding()) {
+              Sliding to step {{ lastTurn()?.diceSum }}
+            } @else if (phase() === 'encounter') {
+              Your encounter
+            } @else if (phase() === 'scrolling') {
+              Onward
+            } @else {
+              Roll dice
+            }
+          </span>
+        </button>
+        @if (lastTurn(); as turn) {
+          <p class="dice">
+            <span class="sr-only"
+              >{{ turn.dice[0] }} + {{ turn.dice[1] }} = {{ turn.diceSum }}; </span
+            >+{{ turn.weeksAdvanced }} weeks
+          </p>
+        } @else {
+          <p class="dice-hint">2 dice &middot; 1 little leap</p>
+        }
+      </div>
+
+      <footer class="scene-footer game__header">
+        <a routerLink="/" aria-label="TO100 home">TO100</a>
+        <button type="button" (click)="newGame()">New game</button>
+        <button type="button" (click)="gameDetails.open = !gameDetails.open">
+          State &amp; debug
+        </button>
+      </footer>
+    </section>
+
+    <dialog
+      #encounterDialog
+      class="encounter-dialog"
+      aria-labelledby="encounter-title"
+      aria-describedby="encounter-description"
+      (cancel)="$event.preventDefault()"
+    >
       @if (lastTurn(); as turn) {
-        <p class="dice">
-          <span class="sr-only">{{ turn.dice[0] }} + {{ turn.dice[1] }} = {{ turn.diceSum }}; </span
-          >+{{ turn.weeksAdvanced }} weeks
+        <p class="eyebrow">Turn {{ turn.turnNumber }} &middot; +{{ turn.weeksAdvanced }} weeks</p>
+        <h2 id="encounter-title">{{ turn.resolvedStep?.title ?? 'You reached 100!' }}</h2>
+        <p id="encounter-description">
+          {{
+            turn.resolvedStep?.description ??
+              'Your journey is complete. No encounter was resolved on this final roll.'
+          }}
         </p>
-      } @else {
-        <p class="dice-hint">2 dice &middot; 1 little leap</p>
-      }
-    </div>
-
-    <footer class="scene-footer game__header">
-      <a routerLink="/" aria-label="TO100 home">TO100</a>
-      <button type="button" (click)="newGame()">New game</button>
-      <a [routerLink]="[]" fragment="game-details" (click)="gameDetails.scrollIntoView()">
-        State &amp; debug <span aria-hidden="true">&darr;</span>
-      </a>
-    </footer>
-  </section>
-
-  <dialog
-    #encounterDialog
-    class="encounter-dialog"
-    aria-labelledby="encounter-title"
-    aria-describedby="encounter-description"
-    (cancel)="$event.preventDefault()"
-  >
-    @if (lastTurn(); as turn) {
-      <p class="eyebrow">Turn {{ turn.turnNumber }} &middot; +{{ turn.weeksAdvanced }} weeks</p>
-      <h2 id="encounter-title">{{ turn.resolvedStep?.title ?? 'You reached 100!' }}</h2>
-      <p id="encounter-description">
-        {{
-          turn.resolvedStep?.description ??
-            'Your journey is complete. No encounter was resolved on this final roll.'
-        }}
-      </p>
-      <dl class="stats">
-        <div>
-          <dt>Health</dt>
-          <dd>{{ turn.appliedChanges.health }}</dd>
-        </div>
-        <div>
-          <dt>Energy</dt>
-          <dd>{{ turn.appliedChanges.energy }}</dd>
-        </div>
-        <div>
-          <dt>Mood</dt>
-          <dd>{{ turn.appliedChanges.mood }}</dd>
-        </div>
-        <div>
-          <dt>Money</dt>
-          <dd>{{ turn.appliedChanges.money }}</dd>
-        </div>
-      </dl>
-      @if (turn.resolvedStep?.itemBehavior === 'collectible') {
-        <p>Added to your inventory. Its effects have not been applied.</p>
-      }
-      <button type="button" autofocus (click)="acknowledgeEncounter()">OK</button>
-    }
-  </dialog>
-
-  <section
-    class="game-details"
-    id="game-details"
-    #gameDetails
-    aria-label="Game details and debugging"
-  >
-    <p class="rules-note">
-      Only the landing step applies. Steps still ahead stay on the path; new steps fill the end.
-      Offset 1 is unreachable with two dice and starts empty. Health 0 does not end this prototype.
-    </p>
-    <div class="game__columns">
-      <details class="panel">
-        <summary id="blueprint-heading">
-          {{ state().hero.name }} &middot; starting blueprint
-        </summary>
         <dl class="stats">
           <div>
-            <dt>Physical resilience</dt>
-            <dd>{{ state().hero.blueprint.physicalResilience }}</dd>
+            <dt>Health</dt>
+            <dd>{{ turn.appliedChanges.health }}</dd>
           </div>
           <div>
-            <dt>Emotional resilience</dt>
-            <dd>{{ state().hero.blueprint.emotionalResilience }}</dd>
+            <dt>Energy</dt>
+            <dd>{{ turn.appliedChanges.energy }}</dd>
           </div>
           <div>
-            <dt>Family finances</dt>
-            <dd>{{ state().hero.blueprint.familyFinances }}</dd>
+            <dt>Mood</dt>
+            <dd>{{ turn.appliedChanges.mood }}</dd>
           </div>
           <div>
-            <dt>Social skills</dt>
-            <dd>{{ state().hero.blueprint.socialSkills }}</dd>
+            <dt>Money</dt>
+            <dd>{{ turn.appliedChanges.money }}</dd>
           </div>
         </dl>
-        <p>
-          Traits have no gameplay effects yet. Family finances are separate from personal money.
-        </p>
-      </details>
+        @if (turn.resolvedStep?.itemBehavior === 'collectible') {
+          <p>Added to your inventory. Its effects have not been applied.</p>
+        }
+        <button type="button" autofocus (click)="acknowledgeEncounter()">OK</button>
+      }
+    </dialog>
+
+    <details
+      class="game-details"
+      id="game-details"
+      #gameDetails
+      aria-label="Game details and debugging"
+    >
+      <summary>Game details &amp; debugging (close)</summary>
+      <p class="rules-note">
+        Only the landing step applies. Steps still ahead stay on the path; new steps fill the end.
+        Offset 1 is unreachable with two dice and starts empty. Health 0 does not end this
+        prototype.
+      </p>
+      <div class="game__columns">
+        <details class="panel">
+          <summary id="blueprint-heading">
+            {{ state().hero.name }} &middot; starting blueprint
+          </summary>
+          <dl class="stats">
+            <div>
+              <dt>Physical resilience</dt>
+              <dd>{{ state().hero.blueprint.physicalResilience }}</dd>
+            </div>
+            <div>
+              <dt>Emotional resilience</dt>
+              <dd>{{ state().hero.blueprint.emotionalResilience }}</dd>
+            </div>
+            <div>
+              <dt>Family finances</dt>
+              <dd>{{ state().hero.blueprint.familyFinances }}</dd>
+            </div>
+            <div>
+              <dt>Social skills</dt>
+              <dd>{{ state().hero.blueprint.socialSkills }}</dd>
+            </div>
+          </dl>
+          <p>
+            Traits have no gameplay effects yet. Family finances are separate from personal money.
+          </p>
+        </details>
+        <details class="panel">
+          <summary>Inventory ({{ state().hero.inventory.length }})</summary>
+          <ul class="inventory">
+            @for (item of state().hero.inventory; track item.id) {
+              <li>
+                <strong>{{ item.title }}</strong>
+                <p>{{ item.description }}</p>
+              </li>
+            } @empty {
+              <li>No collectibles yet.</li>
+            }
+          </ul>
+        </details>
+      </div>
       <details class="panel">
-        <summary>Inventory ({{ state().hero.inventory.length }})</summary>
-        <ul class="inventory">
-          @for (item of state().hero.inventory; track item.id) {
+        <summary>
+          Journey log ({{ state().history.length }} turns) &middot; {{ state().status }}
+        </summary>
+        <ol class="history">
+          @for (turn of state().history; track turn.turnNumber) {
             <li>
-              <strong>{{ item.title }}</strong>
-              <p>{{ item.description }}</p>
+              Turn {{ turn.turnNumber }} &middot; {{ turn.dice[0] }} + {{ turn.dice[1] }} =
+              {{ turn.diceSum }} &middot; +{{ turn.weeksAdvanced }} weeks &middot;
+              {{ turn.resolvedStep?.title ?? 'Reached 100 years' }}
             </li>
           } @empty {
-            <li>No collectibles yet.</li>
+            <li>No turns yet.</li>
           }
-        </ul>
+        </ol>
       </details>
-    </div>
-    <details class="panel">
-      <summary>
-        Journey log ({{ state().history.length }} turns) &middot; {{ state().status }}
-      </summary>
-      <ol class="history">
-        @for (turn of state().history; track turn.turnNumber) {
-          <li>
-            Turn {{ turn.turnNumber }} &middot; {{ turn.dice[0] }} + {{ turn.dice[1] }} =
-            {{ turn.diceSum }} &middot; +{{ turn.weeksAdvanced }} weeks &middot;
-            {{ turn.resolvedStep?.title ?? 'Reached 100 years' }}
-          </li>
-        } @empty {
-          <li>No turns yet.</li>
-        }
-      </ol>
+      <details class="panel debug">
+        <summary>Debug: current state JSON</summary>
+        <pre>{{ state() | json }}</pre>
+      </details>
+      <p class="rules-note">
+        Encounter effects are fictional game-balancing placeholders. This journey is not saved when
+        you leave.
+      </p>
     </details>
-    <details class="panel debug">
-      <summary>Debug: current state JSON</summary>
-      <pre>{{ state() | json }}</pre>
-    </details>
-    <p class="rules-note">
-      Encounter effects are fictional game-balancing placeholders. This journey is not saved when
-      you leave.
-    </p>
-  </section>
-</main>
+  </main>
+</app-landscape-viewport>
