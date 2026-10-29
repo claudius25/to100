@@ -456,11 +456,11 @@ export class ReliefScene implements ChapterVisual {
     const label = new ShapeGeometry(this.glyphs(CHAPTER_TRAITS.at(-1)!.label, y, true));
     label.computeBoundingBox();
     const startX = label.boundingBox!.min.x;
-    const bendX = this.pathRightEdge + CHAPTER_PATH_TEXT.valueClearance;
+    const bendX = this.pathRightEdge + CHAPTER_PATH_TEXT.valueClearance + CHAPTER_PATH_TEXT.gap;
     label.dispose();
-    const baseline = y - CHAPTER_PATH_TEXT.belowSocial;
+    const baseline = y - CHAPTER_PATH_TEXT.belowSocial - CHAPTER_PATH_TEXT.gap;
     // Turn right again once the rising text reaches the Name row.
-    const topY = CHAPTER_SCENE.rowTop + CHAPTER_PATH_TEXT.nameTurnOffset;
+    const topY = CHAPTER_SCENE.rowTop + CHAPTER_PATH_TEXT.nameTurnOffset + CHAPTER_PATH_TEXT.gap;
     let distance = 0;
     const outlines: Shape[] = [];
     for (const character of text) {

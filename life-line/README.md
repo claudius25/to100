@@ -105,6 +105,8 @@ Edit `src/app/blueprint-water/chapter.constants.ts`:
 - `CHAPTER_COLORS`: ground/text colors and retained trait color metadata.
 - `CHAPTER_CLOSING_TEXTS`: ten possible closing phrases, selected once per chapter.
 - `CHAPTER_PATH_TEXT`: closing phrase font size, black color, spacing, surface offset,
+  and `gap` (0.6 world units) for extra clearance below Social, beside the values,
+  and above Name. Increase `gap` to move the whole path farther from the buttons.
   distance below Social, clearance beyond the value column, and `bendRadius` (0.65)
   for a continuous rounded 90-degree turn. When the rising text reaches the Name row
   (`nameTurnOffset` shifts that height), it takes a second rounded turn to the right.

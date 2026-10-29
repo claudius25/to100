@@ -188,8 +188,10 @@ export const CHAPTER_CLOSING_TEXTS = [
 ] as const;
 
 export const CHAPTER_PATH_TEXT = {
-  fontSize: 0.32,
+  fontSize: 0.52,
   color: '#B8B8B8',
+  // Extra world-space clearance around the rows, in addition to the offsets below.
+  gap: 0.6,
   belowSocial: 0.65,
   valueClearance: 0.45,
   letterSpacing: 0.015,
