@@ -12,6 +12,7 @@ import { RouterLink } from '@angular/router';
       <nav class="home__links">
         <a class="home__link" routerLink="/game">Play TO100 →</a>
         <a class="home__link" routerLink="/starting-blueprint">Roll your starting blueprint →</a>
+        <a class="home__link" routerLink="/blueprint-water">Chapter 1 · Liquid blueprint →</a>
         <a class="home__link home__link--ghost" routerLink="/character-lab"
           >Open the Character Lab →</a
         >

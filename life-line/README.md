@@ -30,10 +30,143 @@ Use **State & debug** below the scene for blueprint, inventory, journey log, and
 or reset, even while the previous board is being used for the presentation-only
 slide. The texture and silhouette are local SVG artwork; no Three.js is used here.
 
-Each visit starts a new in-memory game with the model's default blueprint (all four
-traits at 50). The `/starting-blueprint` tower (1–4 levels) is not imported or
-converted to the model's 0–100 trait scale. Leaving/reloading the page loses the session;
-there is no save/load yet. New game resets all model state and upcoming encounters.
+Opening `/game` directly starts a new in-memory game with the model's default
+blueprint (all four traits at 50). Completing `/blueprint-water` first supplies the
+hero's name, mapped blueprint, and Chapter 1 record instead. New game resets the
+journey while retaining that origin, if present. Reloading restarts the journey;
+the origin remains in that browser history entry, but turns are not saved.
+The older `/starting-blueprint` tower remains a separate prototype.
+
+## Liquid blueprint / Chapter 1
+
+Open **http://localhost:4200/blueprint-water**, or choose **Chapter 1 · Liquid
+blueprint** on the home page. This is a separate standalone `BlueprintWater`
+component, not a replacement for the tower.
+
+The scene starts as a blank surface. Six taps (or Enter/Space on the scene)
+reveal:
+
+1. Recessed `Name:` only.
+2. One of exactly 100 unique short male names (3–6 letters), filling with blue water.
+3. `Health:` with a 1–4 level and the existing trait label, filling green.
+4. `Finance:` with its level/label, filling yellow-orange.
+5. `Emotions:` with its level/label, filling pink-red.
+6. `Social:` with its level/label, filling purple.
+
+Labels are dry, right-aligned recesses; values share a separate left-aligned
+column with a fixed gap. Existing rows remain visible. Each result is sampled once;
+filling locks further taps. Start over cancels pending work and clears the surface.
+The scene button is keyboard-accessible and a live region announces the results.
+The normal chapter UI contains only the tappable scene and, after completion, the
+**Begin life** button. Tap instructions and row announcements remain available to
+screen readers. Navigation failures are still shown as alerts.
+
+New letters do not pop into full-depth holes: their floors begin flush with the
+surface and ease downward, continuously exposing the recess walls. Existing text
+stays still. Once the press-in finishes, the liquid waits briefly, rises from the
+bottom, and gradually develops opacity and its final color from a clear state.
+For Health, Finance, Emotions and Social, each tap first presses in only the label,
+waits `labelValueDelayMs` after that reveal settles, then presses in and fills the
+value. The next tap stays locked until both phases finish.
+
+### Tweaking Chapter 1
+
+Edit `src/app/blueprint-water/chapter.constants.ts`:
+
+- `MALE_NAMES`: the 100 short male names.
+- `CHAPTER_TEXT`, `CHAPTER_TRAITS`, `CHAPTER_LEVEL_LABELS`: chapter copy, row labels,
+  and level wording. Level wording is shared with the original tower.
+- `CHAPTER_COLORS`: the five liquid colors, clear-liquid color and ground/text colors.
+- `CHAPTER_TIMINGS`: `pressMs` (1100), `labelValueDelayMs` (400),
+  `fillDelayMs` (180), `fillMs` (1800), and
+  `settleMs` (180). All values are milliseconds. Label-only taps skip liquid timings.
+- `CHAPTER_LIQUID`: target fill height, final opacity, `clearOpacity` (how visible the
+  clear liquid is when it starts rising), fraction of the rise spent clear before color
+  develops, and surface finish.
+- `CHAPTER_SCENE`: `fontSize` (0.62, Three.js world units; also scales 2D preview
+  text), recess depth, row spacing, column positions and `framingPadding` (0.1).
+  Both camera projections cap the configured zoom to fit the complete five-row layout,
+  including every possible name and trait value, on load and resize. Framing is
+  reserved before the first tap, so revealing rows does not move the camera.
+- `CHAPTER_VIEW`: default projection, zoom, pan, camera rotation in degrees, plane
+  rotation around Z (`planeRotationZ`, degrees), ambient light intensity/enabled, and
+  both directional lights' XYZ positions and enabled flags. The surface lies in the XY plane; +Z
+  points out of the ground.
+- `CHAPTER_DEBUG` (default `false`): master switch for the camera/light panel, FPS
+  overlay/sampling and expandable state JSON. Set it to `true` in a development build
+  to show these tools; they remain absent in production.
+- `CHAPTER_STATS` (requires `CHAPTER_DEBUG`): the FPS overlay in the top-left corner. `visible` (shown on
+  load; toggle with "Show FPS stats"), `sampleMs` (refresh/averaging window) and
+  `slowFrameMs` (frames slower than this count as slow). The overlay shows FPS, average
+  and worst frame time, CPU time per frame, idle/moving activity and pixel ratio, canvas
+  size, whether the GI pass ran, and draw calls/triangles per frame.
+- `CHAPTER_QUALITY`: lightweight rendering defaults: `curveSegments` (12),
+  `maxPixelRatio` (1) and `shadowMapSize` (2048). Renderer antialiasing is enabled;
+  multisampled post-processing and supersampling are disabled; resolution does not increase when
+  idle. `giAoIntensity` defaults to 0 so the idle scene keeps the same render path as
+  the animation. Raise it in the dev controls to enable AO only while idle. Text and
+  liquid reveal animations are unchanged.
+- `CHAPTER_MOUSE`: rotation and scroll-zoom sensitivity for the dev mouse controller.
+- `giEnabled`, `giEnvironment`, `giAoIntensity`, `giAoRadius` (in `CHAPTER_VIEW`): a
+  WebGL global-illumination approximation that combines RoomEnvironment image-based
+  bounce light with optional GTAO ambient occlusion. Environment bounce is on by
+  default; ambient occlusion is off by default for performance. Three's true screen-space GI
+  (`SSGINode`) requires `WebGPURenderer` and is not compatible with this WebGL water scene.
+- `CHAPTER_WATER`: GPU mask size and damping, plus the always-on liquid motion that
+  needs no touch or hover. `rippleIntervalMs`/`dropsPerRipple`/`impulse`/`rippleRadius`
+  control the automatic drops, `maxAmplitude` caps their height, and `swellAmplitude`,
+  `swellSpeed` and `swellWavelength` control a constant rolling swell. Heights are
+  also limited by the space above the liquid, so it never spills over the surface.
+- `CHAPTER_SCENE.plateSize` (80): width and height of the ground plate.
+
+The component also accepts a partial `[timings]` override. The same timing/pose
+helpers drive the GPU scene and the 2D preview's schedule. Reduced motion caps
+press and fill at 120ms each, skips the delays, and disables continuing ripples.
+
+With `CHAPTER_DEBUG = true` and `npm start` (Angular development mode), expand **Dev: camera & lights** at
+the top-right of the scene. Toggle orthographic/perspective and use the live sliders
+for zoom, pan, yaw, tilt, roll, and key/fill light positions. Moving a light refreshes
+its shadows. Reset restores `CHAPTER_VIEW`; zoom remains capped to keep all text
+visible. **Start over** resets the chapter. The panel includes selectable JSON:
+copy those values into `CHAPTER_VIEW` to keep your preferred view. The sliders
+do not alter chapter results or reset on a new chapter; they reset on page reload.
+They require WebGL and are disabled in the 2D fallback. The entire panel is absent
+in production mode (`npm run build`), while the configured defaults still apply.
+Enable **Mouse camera controls** in that same dev panel to left-drag to rotate,
+right-drag/middle-drag/Shift-drag to pan on the ground plane, and scroll to zoom.
+Mouse movements update the sliders and settings JSON in either projection.
+While enabled, scene clicks do not reveal rows; disable the controller to continue
+the chapter. It remains usable during reveals and after the chapter is completed.
+Uncheck **Key light enabled** or **Fill light enabled** to turn that light off
+without losing its position. Reset restores both enabled flags as well.
+
+**Begin life** passes the completed chapter to `/game`. As explicitly selected,
+levels 1/2/3/4 map to 25/50/75/100, with health blueprint mapped to
+`physicalResilience`. The game engine records Chapter 1 in `Hero.chapters`.
+Family finances do not grant personal money, and starting condition values remain 100. Traits still have no passive gameplay effects.
+
+Implementation under `src/app/blueprint-water/`:
+
+- `blueprint-chapter.ts`: Angular-free six-tap sequence, names, typed rows and result.
+- `relief-scene.ts`: actual inset letter geometry, liquid surfaces, lighting,
+  responsive framing, pointer ripples, and renderer/geometry cleanup.
+- `gpu-water.ts`: the supplied scene's masked GPU heightfield recurrence, adapted
+  to the project's Three.js version. A 256×256 mask confines waves to value glyphs,
+  including letter counters. Static wall shadows are recomputed on row or light changes.
+- `hero-blueprint.ts`: validated router-history handoff and the explicit scale adapter.
+
+Water rises in recess depth (Z), as in the supplied archive; this is a surface-wave
+simulation, not a volumetric fluid/overflow solver. Reduced motion uses a short fill
+without continuing ripples. Missing WebGL2, GPU initialization failure, or context
+loss displays an explicit notice and switches to an animated 2D preview using the
+same sequence/results. Renderer failures are also logged to the console.
+
+The local Helvetiker font is copied unchanged from the supplied archive, including
+its embedded Magenta font license. Three.js/water-example attribution is preserved
+in `public/blueprint-water/THREE-LICENSE.txt`; the renderer uses the existing npm
+Three.js dependency rather than copying the archive's bundled library.
+
+Focused validation: `npm test -- --watch=false --include=src/app/blueprint-water`.
 
 ## Starting blueprint
 
@@ -57,9 +190,9 @@ from inside the previous one, flies clear of its closing flaps, and lands.
 - Without WebGL, the same sequence drives a simplified 2D tower with a notice.
 
 `StartingBlueprintPage.onBlueprintCompleted` receives the `BlueprintResult` and
-re-emits it through `beginLife` when **Begin life** is pressed. There is no store yet,
-and no adapter to the simulation Hero's 0–100 blueprint (`physicalResilience`, etc.)
-has been defined, so none is invented.
+re-emits it through `beginLife` when **Begin life** is pressed. This older tower
+does not navigate to the game; the new liquid chapter owns the explicit handoff
+and 1–4 to 0–100 mapping.
 
 ## TO100 simulation
 
@@ -111,20 +244,20 @@ npm start      # then open http://localhost:4200/character-lab
 
 ### Where things live
 
-| Concern | File |
-| --- | --- |
-| Page + HTML controls | `src/app/character-lab/character-lab.ts` / `.html` / `.scss` |
-| Typed config, slider limits, presets, derived metrics | `src/app/character-lab/model/character-config.ts` |
-| Joint/rig contract (swap in a rigged GLB later) | `src/app/character-lab/model/character-rig.ts` |
-| Renderer, orthographic camera, resize, loop, picking | `src/app/character-lab/three/scene-controller.ts` |
-| Geometry, materials, joint hierarchy | `src/app/character-lab/three/character-factory.ts` |
-| Walk cycle, idle, leg IK | `src/app/character-lab/three/character-animator.ts` |
-| Marker targeting, facing, gait phase | `src/app/character-lab/three/movement-controller.ts` |
-| Inverted-hull outline material | `src/app/character-lab/three/outline.ts` |
+| Concern                                               | File                                                         |
+| ----------------------------------------------------- | ------------------------------------------------------------ |
+| Page + HTML controls                                  | `src/app/character-lab/character-lab.ts` / `.html` / `.scss` |
+| Typed config, slider limits, presets, derived metrics | `src/app/character-lab/model/character-config.ts`            |
+| Joint/rig contract (swap in a rigged GLB later)       | `src/app/character-lab/model/character-rig.ts`               |
+| Renderer, orthographic camera, resize, loop, picking  | `src/app/character-lab/three/scene-controller.ts`            |
+| Geometry, materials, joint hierarchy                  | `src/app/character-lab/three/character-factory.ts`           |
+| Walk cycle, idle, leg IK                              | `src/app/character-lab/three/character-animator.ts`          |
+| Marker targeting, facing, gait phase                  | `src/app/character-lab/three/movement-controller.ts`         |
+| Inverted-hull outline material                        | `src/app/character-lab/three/outline.ts`                     |
 
-* **Change how he looks** — proportions and presets in `character-config.ts`
+- **Change how he looks** — proportions and presets in `character-config.ts`
   (`computeMetrics` derives every absolute dimension), shapes in `character-factory.ts`.
-* **Change how he walks** — stride, foot trajectory, bob and arm swing in
+- **Change how he walks** — stride, foot trajectory, bob and arm swing in
   `character-animator.ts`; speed, turning and stopping rules in `movement-controller.ts`.
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.28.

@@ -44,6 +44,7 @@ describe('Hero and Step', () => {
       partner: null,
       superpowers: [],
       inventory: [],
+      chapters: [],
     });
     hero.ageWeeks = 2 * 52 + 7;
     expect(hero.ageYears).toBe(2);

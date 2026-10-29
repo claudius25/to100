@@ -27,6 +27,26 @@ export interface NamedEntry {
   name: string;
 }
 
+export interface HeroBlueprint {
+  physicalResilience: number;
+  emotionalResilience: number;
+  familyFinances: number;
+  socialSkills: number;
+}
+
+export interface BlueprintLifeChapter {
+  number: 1;
+  kind: 'blueprint';
+  title: string;
+  name: string;
+  blueprint: HeroBlueprint;
+}
+
+export interface HeroStartingState {
+  blueprint: HeroBlueprint;
+  chapter: BlueprintLifeChapter;
+}
+
 export interface Skill extends NamedEntry {
   level: number;
 }

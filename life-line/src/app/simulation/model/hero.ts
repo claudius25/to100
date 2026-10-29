@@ -1,9 +1,17 @@
 import type { Step } from './step';
-import { WEEKS_PER_YEAR, type Asset, type Job, type NamedEntry, type Skill } from './types';
+import {
+  WEEKS_PER_YEAR,
+  type Asset,
+  type BlueprintLifeChapter,
+  type HeroBlueprint,
+  type Job,
+  type NamedEntry,
+  type Skill,
+} from './types';
 
 export class Hero {
   ageWeeks = 0;
-  blueprint = {
+  blueprint: HeroBlueprint = {
     physicalResilience: 50,
     emotionalResilience: 50,
     familyFinances: 50,
@@ -19,6 +27,7 @@ export class Hero {
   partner: NamedEntry | null = null;
   superpowers: NamedEntry[] = [];
   inventory: Step[] = [];
+  chapters: BlueprintLifeChapter[] = [];
 
   constructor(
     public readonly id: string,

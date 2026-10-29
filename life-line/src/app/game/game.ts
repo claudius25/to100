@@ -1,4 +1,4 @@
-import { JsonPipe } from '@angular/common';
+import { JsonPipe, Location } from '@angular/common';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -10,7 +10,8 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { readBlueprintChapter, toHeroStartingState } from '../blueprint-water/hero-blueprint';
 import { GameEngine } from '../simulation/model/game-engine';
 import type { Step } from '../simulation/model/step';
 import { TARGET_AGE_WEEKS } from '../simulation/model/types';
@@ -25,6 +26,9 @@ import { TARGET_AGE_WEEKS } from '../simulation/model/types';
 export class GamePage {
   private readonly engine = new GameEngine();
   private readonly injector = inject(Injector);
+  private readonly origin = readBlueprintChapter(
+    inject(Router).currentNavigation()?.extras.state ?? inject(Location).getState(),
+  );
 
   protected readonly state = signal(this.engine.getState());
   protected readonly targetAgeWeeks = TARGET_AGE_WEEKS;
@@ -46,6 +50,13 @@ export class GamePage {
     5: [0, 2, 4, 6, 8],
     6: [0, 2, 3, 5, 6, 8],
   };
+
+  constructor() {
+    if (this.origin) {
+      this.state.set(this.engine.startNewGame(this.origin.name, toHeroStartingState(this.origin)));
+      this.displayedSteps.set(this.state().upcomingSteps);
+    }
+  }
 
   protected rollDice(): void {
     if (this.busy() || this.state().status === 'completed') {
@@ -121,7 +132,11 @@ export class GamePage {
     this.phase.set('ready');
     this.landingPosition.set(7);
     this.cameraWeeks.set(0);
-    this.state.set(this.engine.startNewGame());
+    this.state.set(
+      this.origin
+        ? this.engine.startNewGame(this.origin.name, toHeroStartingState(this.origin))
+        : this.engine.startNewGame(),
+    );
     this.displayedSteps.set(this.state().upcomingSteps);
   }
 }

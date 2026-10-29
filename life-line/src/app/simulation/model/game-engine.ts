@@ -7,6 +7,7 @@ import {
   type Changes,
   type GameState,
   type GameStatus,
+  type HeroStartingState,
   type RandomSource,
   type StepTemplate,
   type TurnResult,
@@ -29,8 +30,12 @@ export class GameEngine {
     this.startNewGame();
   }
 
-  startNewGame(name = 'Hero'): GameState {
+  startNewGame(name = 'Hero', startingState?: HeroStartingState): GameState {
     this.hero = new Hero(`hero-${++this.gameNumber}`, name);
+    if (startingState) {
+      this.hero.blueprint = structuredClone(startingState.blueprint);
+      this.hero.chapters = [structuredClone(startingState.chapter)];
+    }
     this.turnNumber = 0;
     this.status = 'playing';
     this.history = [];

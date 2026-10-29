@@ -1,7 +1,10 @@
+import { CHAPTER_LEVEL_LABELS } from '../../blueprint-water/chapter.constants';
+
 /**
  * Starting traits revealed before a life begins. They describe starting
  * circumstances only and are deliberately kept separate from in-game resources
- * such as health, money or mood. No formula converts between them yet.
+ * such as health, money or mood. The liquid chapter has an explicit adapter
+ * mapping these levels to Hero's 0-100 starting blueprint.
  */
 export type BlueprintTraitKey =
   'healthBlueprint' | 'familyFinances' | 'emotionalResilience' | 'socialSkills';
@@ -40,28 +43,28 @@ export const BLUEPRINT_TRAITS: readonly BlueprintTraitConfig[] = [
     name: 'Health blueprint',
     color: '#16B85A',
     colorName: 'green',
-    levels: ['Fragile', 'Sensitive', 'Healthy', 'Robust'],
+    levels: CHAPTER_LEVEL_LABELS.healthBlueprint,
   },
   {
     key: 'familyFinances',
     name: 'Family finances',
     color: '#FF9418',
     colorName: 'orange',
-    levels: ['Limited', 'Modest', 'Comfortable', 'Abundant'],
+    levels: CHAPTER_LEVEL_LABELS.familyFinances,
   },
   {
     key: 'emotionalResilience',
     name: 'Emotional resilience',
     color: '#EF3545',
     colorName: 'red',
-    levels: ['Sensitive', 'Developing', 'Steady', 'Resilient'],
+    levels: CHAPTER_LEVEL_LABELS.emotionalResilience,
   },
   {
     key: 'socialSkills',
     name: 'Social skills',
     color: '#923FEA',
     colorName: 'purple',
-    levels: ['Reserved', 'Warming up', 'Outgoing', 'Connector'],
+    levels: CHAPTER_LEVEL_LABELS.socialSkills,
   },
 ];
 

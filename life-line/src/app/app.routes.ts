@@ -19,6 +19,11 @@ export const routes: Routes = [
     loadComponent: () => import('./character-lab/character-lab').then((m) => m.CharacterLab),
   },
   {
+    path: 'blueprint-water',
+    title: 'TO100 — Chapter 1',
+    loadComponent: () => import('./blueprint-water/blueprint-water').then((m) => m.BlueprintWater),
+  },
+  {
     path: 'starting-blueprint',
     title: 'Life Line — Your Starting Blueprint',
     loadComponent: () =>
