@@ -120,7 +120,6 @@ export const CHAPTER_COLORS = {
   finance: '#f4a51c',
   emotions: '#ec507c',
   social: '#9554e9',
-  clearLiquid: '#f2faff',
   surface: '#e3e2df',
   dryText: '#b6b5b1',
 } as const;
@@ -147,50 +146,35 @@ export const CHAPTER_TEXT = {
   animating: 'Let it settle…',
   completed: 'Chapter 1 is complete. Your life begins next.',
   hints: [
-    'Tap to leave your first mark.',
-    'Tap to discover your name.',
-    'Tap to discover your health blueprint.',
-    'Tap to discover your family finances.',
-    'Tap to discover your emotional resilience.',
-    'Tap to discover your social skills.',
+    'Tap to raise the Name button.',
+    'Press the raised Name label to discover your name.',
+    'Press the raised Health label to discover your health blueprint.',
+    'Press the raised Finance label to discover your family finances.',
+    'Press the raised Emotions label to discover your emotional resilience.',
+    'Press the raised Social label to discover your social skills.',
   ],
-  noGpu: 'GPU water is unavailable. Showing an animated 2D preview.',
-  gpuFailed: 'The 3D water renderer could not continue. Showing an animated 2D preview.',
+  noGpu: 'The 3D renderer is unavailable. Showing an animated 2D preview.',
+  gpuFailed: 'The 3D renderer could not continue. Showing an animated 2D preview.',
   navigationFailed: 'Could not open your life journey. Please try again.',
 } as const;
 
 export interface ChapterTimings {
   pressMs: number;
-  labelValueDelayMs: number;
-  fillDelayMs: number;
-  fillMs: number;
   settleMs: number;
 }
 
-/** All durations are milliseconds; the liquid starts only after the text is fully pressed. */
+/** All durations are milliseconds; label, value and next-button motion run together. */
 export const CHAPTER_TIMINGS: Readonly<ChapterTimings> = {
-  pressMs: 1100,
-  labelValueDelayMs: 400,
-  fillDelayMs: 180,
-  fillMs: 1800,
-  settleMs: 180,
+  pressMs: 240,
+  settleMs: 40,
 };
 export const CHAPTER_REDUCED_MOTION_MS = 120;
 
-export const CHAPTER_LIQUID = {
-  targetFill: 0.7,
-  opacity: 0.96,
-  // Opacity of the clear, uncolored liquid as it starts rising (0 = invisible).
-  clearOpacity: 0.35,
-  // Fraction of the rise spent clear before the color starts developing.
-  colorDelayFraction: 0.1,
-  roughness: 0.17,
-  metalness: 0.08,
-  clearcoat: 1,
-} as const;
-
 export const CHAPTER_SCENE = {
   recessDepth: 0.24,
+  raisedHeight: 0.24,
+  // Extra world-space padding around a label's tappable rectangle.
+  labelHitPadding: 0.12,
   labelEdge: -1.35,
   valueEdge: -0.75,
   rowTop: 2.2,
@@ -333,7 +317,7 @@ export const CHAPTER_QUALITY = {
   giOnlyWhenIdle: true,
   // How long the scene must be still before enabling the optional GI pass.
   idleDelayMs: 250,
-  // Limit supersampling on high-density screens to balance sharpness and performance.
+  // Cap pixel density to balance sharpness and GPU workload.
   maxPixelRatio: 2,
   shadowMapSize: 2048,
 } as const;
@@ -352,21 +336,4 @@ export const CHAPTER_STATS = {
   sampleMs: 500,
   // Frame times above this are counted as dropped frames (≈ 60 fps budget).
   slowFrameMs: 20,
-} as const;
-
-export const CHAPTER_WATER = {
-  resolution: 256,
-  bounds: 16,
-  // Automatic drops keep the liquid moving without touch or hover.
-  rippleIntervalMs: 220,
-  dropsPerRipple: 2,
-  damping: 0.985,
-  rippleRadius: 0.2,
-  impulse: 0.1,
-  // Maximum ripple height in world units (also limited by the space above the liquid).
-  maxAmplitude: 0.025,
-  // Constant rolling swell layered on top of the ripples.
-  swellAmplitude: 0.014,
-  swellSpeed: 1.4,
-  swellWavelength: 1.2,
 } as const;

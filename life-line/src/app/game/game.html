@@ -1,4 +1,4 @@
-<app-landscape-viewport>
+<app-landscape-viewport (portraitChange)="changeOrientation($event)">
   <main class="game">
     <svg class="symbol-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <defs>

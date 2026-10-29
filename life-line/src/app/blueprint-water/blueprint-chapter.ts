@@ -7,7 +7,6 @@ import {
   type TraitResult,
 } from '../starting-blueprint/model/starting-blueprint';
 import {
-  CHAPTER_COLORS,
   CHAPTER_LEVEL_LABELS,
   CHAPTER_TEXT,
   CHAPTER_TRAITS,
@@ -22,7 +21,7 @@ export interface WaterBlueprintResult {
 export interface ReliefRow {
   label: string;
   value: string;
-  color: string;
+  raised: boolean;
 }
 
 export interface ChapterVisual {
@@ -30,7 +29,7 @@ export interface ChapterVisual {
   reset(): void;
 }
 
-export type ChapterStage = 'ready' | 'filling' | 'completed';
+export type ChapterStage = 'ready' | 'animating' | 'completed';
 
 /** Six accepted taps; visual callbacks cannot survive a reset or route disposal. */
 export class BlueprintChapter {
@@ -56,7 +55,7 @@ export class BlueprintChapter {
   advance(): boolean {
     if (this.destroyed || this.stage !== 'ready') return false;
     if (this.tap === 0) {
-      this.rows.push({ label: CHAPTER_TEXT.nameLabel, value: '', color: CHAPTER_COLORS.name });
+      this.rows.push({ label: CHAPTER_TEXT.nameLabel, value: '', raised: true });
     } else if (this.tap === 1) {
       const sample = this.random();
       if (!Number.isFinite(sample) || sample < 0 || sample >= 1) {
@@ -64,6 +63,7 @@ export class BlueprintChapter {
       }
       this.name = MALE_NAMES[Math.floor(sample * MALE_NAMES.length)].toUpperCase();
       this.rows[0].value = this.name;
+      this.rows[0].raised = false;
     } else {
       const index = this.tap - 2;
       const trait = CHAPTER_TRAITS[index];
@@ -74,14 +74,18 @@ export class BlueprintChapter {
         label: CHAPTER_LEVEL_LABELS[trait.key][level - 1],
       };
       this.traits.push(result);
+      this.rows[index + 1].value = `${result.level}${CHAPTER_TEXT.valueSeparator}${result.label}`;
+      this.rows[index + 1].raised = false;
+    }
+    if (this.tap >= 1 && this.tap <= CHAPTER_TRAITS.length) {
       this.rows.push({
-        label: trait.label,
-        value: `${result.level}${CHAPTER_TEXT.valueSeparator}${result.label}`,
-        color: trait.color,
+        label: CHAPTER_TRAITS[this.tap - 1].label,
+        value: '',
+        raised: true,
       });
     }
     this.tap++;
-    this.stage = 'filling';
+    this.stage = 'animating';
     const generation = this.generation;
     const tap = this.tap;
     this.changed();
@@ -90,7 +94,7 @@ export class BlueprintChapter {
         this.destroyed ||
         generation !== this.generation ||
         tap !== this.tap ||
-        this.stage !== 'filling'
+        this.stage !== 'animating'
       )
         return;
       this.stage = this.tap === 6 ? 'completed' : 'ready';

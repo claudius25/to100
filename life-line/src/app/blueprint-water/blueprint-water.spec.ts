@@ -14,44 +14,33 @@ import {
 } from './chapter.constants';
 import { ReliefScene } from './relief-scene';
 
-const debug = vi.hoisted(() => ({ enabled: false }));
-vi.mock('./chapter.constants', async (importOriginal) => {
-  const constants = await importOriginal<typeof import('./chapter.constants')>();
-  return {
-    ...constants,
-    get CHAPTER_DEBUG() {
-      return debug.enabled;
-    },
-  };
-});
-
 async function waitReady(fixture: ComponentFixture<BlueprintWater>): Promise<void> {
   for (let i = 0; i < 100; i++) {
     await fixture.whenStable();
     if (!fixture.nativeElement.querySelector('.scene--busy')) return;
     await new Promise((resolve) => setTimeout(resolve, 5));
   }
-  throw new Error('Chapter did not finish filling.');
+  throw new Error('Chapter did not finish animating.');
 }
 
-async function createChapter(timings: Partial<ChapterTimings> = {}) {
+async function createChapter(timings: Partial<ChapterTimings> = {}, debug = false) {
   const fixture = TestBed.createComponent(BlueprintWater);
   fixture.componentRef.setInput('random', () => 0);
   fixture.componentRef.setInput('timings', {
     pressMs: 5,
-    labelValueDelayMs: 0,
-    fillDelayMs: 0,
-    fillMs: 5,
     settleMs: 0,
     ...timings,
   });
   await fixture.whenStable();
+  if (debug) {
+    fixture.nativeElement.querySelector('.dev-toggle').click();
+    await fixture.whenStable();
+  }
   return fixture;
 }
 
 describe('BlueprintWater', () => {
   beforeEach(() => {
-    debug.enabled = false;
     TestBed.configureTestingModule({ providers: [provideRouter(routes)] });
   });
   afterEach(() => {
@@ -59,39 +48,44 @@ describe('BlueprintWater', () => {
     vi.unstubAllGlobals();
   });
 
-  it('presses each trait label before revealing its value and keeps taps locked during the delay', async () => {
-    const fixture = await createChapter({ labelValueDelayMs: 100 });
+  it('requires pressing the raised label and recesses its value while the next label rises', async () => {
+    const fixture = await createChapter({ pressMs: 50 });
     const root = fixture.nativeElement as HTMLElement;
     const scene = root.querySelector<HTMLButtonElement>('.scene')!;
-    for (let i = 0; i < 2; i++) {
-      scene.click();
-      await waitReady(fixture);
-    }
-    for (const { label } of CHAPTER_TRAITS) {
-      scene.click();
+    scene.click();
+    await waitReady(fixture);
+    expect(root.querySelector('.preview__raised')?.textContent?.trim()).toBe(
+      CHAPTER_TEXT.nameLabel,
+    );
+    expect(root.querySelector('.preview__liquid')).toBeNull();
+    for (const [index, label] of [
+      CHAPTER_TEXT.nameLabel,
+      ...CHAPTER_TRAITS.map((t) => t.label),
+    ].entries()) {
+      // Pointer taps elsewhere must not activate a raised button.
+      scene.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
       await fixture.whenStable();
-      const lastRow = () => [...root.querySelectorAll('.preview__row')].at(-1)!;
-      expect(lastRow().querySelector('.preview__label')?.textContent?.trim()).toBe(label);
-      expect(lastRow().querySelector('.preview__value')?.textContent?.trim()).toBe('');
-      expect(lastRow().querySelector('.preview__liquid--filling')).toBeNull();
+      expect(scene.disabled).toBe(false);
+      const raised = root.querySelector<HTMLElement>('.preview__raised')!;
+      expect(raised.textContent?.trim()).toBe(label);
+      raised.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
+      await fixture.whenStable();
+      const row = root.querySelectorAll('.preview__row')[index];
+      expect(row.querySelector('.preview__label--pressing')).not.toBeNull();
+      expect(row.querySelector('.preview__value')?.textContent?.trim()).not.toBe('');
       expect(scene.disabled).toBe(true);
-      await new Promise((resolve) => setTimeout(resolve, 40));
-      await fixture.whenStable();
-      expect(lastRow().querySelector('.preview__value')?.textContent?.trim()).toBe('');
+      expect(root.querySelector('.preview__raised')?.textContent?.trim() ?? null).toBe(
+        CHAPTER_TRAITS[index]?.label ?? null,
+      );
       await waitReady(fixture);
-      expect(lastRow().querySelector('.preview__value')?.textContent?.trim()).not.toBe('');
     }
+    expect(root.querySelector('.begin')).not.toBeNull();
   });
 
-  it('cancels a delayed value on reset and destruction', async () => {
-    debug.enabled = true;
-    const fixture = await createChapter({ labelValueDelayMs: 100 });
+  it('cancels an active reveal on reset and destruction', async () => {
+    const fixture = await createChapter({ pressMs: 100 }, true);
     const root = fixture.nativeElement as HTMLElement;
     const scene = root.querySelector<HTMLButtonElement>('.scene')!;
-    for (let i = 0; i < 2; i++) {
-      scene.click();
-      await waitReady(fixture);
-    }
     scene.click();
     await new Promise((resolve) => setTimeout(resolve, 30));
     root.querySelector<HTMLButtonElement>('.reset')!.click();
@@ -99,10 +93,6 @@ describe('BlueprintWater', () => {
     await fixture.whenStable();
     expect(root.querySelectorAll('.preview__row')).toHaveLength(0);
     expect(scene.disabled).toBe(false);
-    for (let i = 0; i < 2; i++) {
-      scene.click();
-      await waitReady(fixture);
-    }
     scene.click();
     await new Promise((resolve) => setTimeout(resolve, 30));
     const cancelTimer = vi.spyOn(globalThis, 'clearTimeout');
@@ -112,7 +102,6 @@ describe('BlueprintWater', () => {
   });
 
   it('wires development sliders and projection/reset buttons to the 3D scene', async () => {
-    debug.enabled = true;
     vi.stubGlobal('WebGL2RenderingContext', class {});
     vi.stubGlobal(
       'ResizeObserver',
@@ -124,7 +113,7 @@ describe('BlueprintWater', () => {
     vi.spyOn(ReliefScene.prototype, 'init').mockResolvedValue();
     vi.spyOn(ReliefScene.prototype, 'dispose').mockImplementation(() => {});
     const setView = vi.spyOn(ReliefScene.prototype, 'setView');
-    const fixture = await createChapter();
+    const fixture = await createChapter({}, true);
     const root = fixture.nativeElement as HTMLElement;
     const panel = root.querySelector<HTMLDetailsElement>('.scene-controls')!;
     expect(panel).not.toBeNull();
@@ -163,7 +152,7 @@ describe('BlueprintWater', () => {
     ).toBeNull();
     expect(root.querySelector('.begin')).toBeNull();
     expect(root.querySelector('[role="status"]:last-child')?.textContent).toContain('2D preview');
-    expect(scene.getAttribute('aria-label')).toContain('first mark');
+    expect(scene.getAttribute('aria-label')).toBe(CHAPTER_TEXT.hints[0]);
     scene.click();
     scene.click();
     await waitReady(fixture);
@@ -200,9 +189,8 @@ describe('BlueprintWater', () => {
     });
   });
 
-  it('resets mid-fill and cancels work when destroyed', async () => {
-    debug.enabled = true;
-    const fixture = await createChapter();
+  it('resets mid-animation and cancels work when destroyed', async () => {
+    const fixture = await createChapter({}, true);
     const root = fixture.nativeElement as HTMLElement;
     const completed = vi.fn();
     fixture.componentInstance.blueprintCompleted.subscribe(completed);
@@ -210,7 +198,7 @@ describe('BlueprintWater', () => {
     root.querySelector<HTMLButtonElement>('.reset')!.click();
     await waitReady(fixture);
     expect(root.querySelectorAll('.preview__row')).toHaveLength(0);
-    expect(root.querySelector('.scene')?.getAttribute('aria-label')).toContain('first mark');
+    expect(root.querySelector('.scene')?.getAttribute('aria-label')).toBe(CHAPTER_TEXT.hints[0]);
     root.querySelector<HTMLButtonElement>('.scene')!.click();
     fixture.destroy();
     await new Promise((resolve) => setTimeout(resolve, 15));

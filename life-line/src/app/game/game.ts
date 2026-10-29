@@ -25,6 +25,7 @@ import { TARGET_AGE_WEEKS } from '../simulation/model/types';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GamePage {
+  private portraitBlocked = false;
   private readonly engine = new GameEngine();
   private readonly injector = inject(Injector);
   private readonly origin = readBlueprintChapter(
@@ -81,7 +82,18 @@ export class GamePage {
       return;
     }
     this.phase.set('encounter');
-    this.encounterDialog().nativeElement.showModal();
+    if (!this.portraitBlocked) this.encounterDialog().nativeElement.showModal();
+  }
+
+  protected changeOrientation(blocked: boolean): void {
+    this.portraitBlocked = blocked;
+    if (this.phase() !== 'encounter') return;
+    const dialog = this.encounterDialog().nativeElement;
+    if (blocked) {
+      dialog.close();
+    } else if (!dialog.open) {
+      dialog.showModal();
+    }
   }
 
   protected acknowledgeEncounter(): void {

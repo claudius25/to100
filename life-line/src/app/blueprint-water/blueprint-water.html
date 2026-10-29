@@ -1,49 +1,38 @@
 <app-landscape-viewport>
   <section
     class="chapter"
-    [style.--fill-duration]="animationTimings().fillMs + 'ms'"
     [style.--press-duration]="animationTimings().pressMs + 'ms'"
-    [style.--fill-delay]="animationTimings().pressMs + animationTimings().fillDelayMs + 'ms'"
     [style.--surface]="colors.surface"
-    [style.--clear-liquid]="colors.clearLiquid"
     [style.--dry-text]="colors.dryText"
-    [style.--liquid-opacity]="liquid.opacity"
-    [style.--clear-opacity]="liquid.clearOpacity"
     [style.--font-scale]="fontScale"
   >
     <button
       type="button"
       class="scene"
       [class.scene--busy]="busy()"
+      [class.scene--label-ready]="snapshot().tap > 0"
       [disabled]="!mouseCamera() && (busy() || snapshot().stage === 'completed')"
       [attr.aria-label]="hint()"
-      (click)="advance()"
+      (click)="advance($event)"
     >
       <div #stage class="stage" [class.stage--camera]="mouseCamera()"></div>
       @if (mode() === 'fallback') {
         <div class="preview" aria-hidden="true">
-          @for (row of visualRows(); track row.label; let last = $last; let index = $index) {
+          @for (row of visualRows(); track row.label; let index = $index) {
             <div class="preview__row">
               <span
                 class="preview__label preview__recess"
-                [class.preview__pressing]="newLabel(index)"
+                [class.preview__raised]="row.raised"
+                [class.preview__label--pressing]="pressingRow(index)"
+                [attr.data-pressable]="row.raised"
               >
                 {{ row.label }}
               </span>
-              <span class="preview__value" [style.--liquid]="row.color">
-                <span
-                  class="preview__recess"
-                  [class.preview__pressing]="last && !!row.value && snapshot().stage === 'filling'"
-                  >{{ row.value }}</span
-                >
-                <span
-                  class="preview__liquid"
-                  [class.preview__liquid--filling]="
-                    last && !!row.value && snapshot().stage === 'filling'
-                  "
-                  >{{ row.value }}</span
-                >
-              </span>
+              <span
+                class="preview__value preview__recess"
+                [class.preview__pressing]="pressingRow(index)"
+                >{{ row.value }}</span
+              >
             </div>
           }
         </div>

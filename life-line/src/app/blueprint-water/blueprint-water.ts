@@ -28,7 +28,6 @@ import {
   CHAPTER_COLORS,
   CHAPTER_DEBUG,
   CHAPTER_DEV_BUTTON,
-  CHAPTER_LIQUID,
   CHAPTER_SCENE,
   CHAPTER_STATS,
   CHAPTER_TEXT,
@@ -61,12 +60,10 @@ export class BlueprintWater {
   private timer: ReturnType<typeof setTimeout> | null = null;
   private pendingDone: (() => void) | null = null;
   private disposed = false;
-  private visualGeneration = 0;
   private readonly reducedMotion = signal(false);
 
   protected readonly text = CHAPTER_TEXT;
   protected readonly colors = CHAPTER_COLORS;
-  protected readonly liquid = CHAPTER_LIQUID;
   protected readonly fontScale = CHAPTER_SCENE.fontSize / 0.62;
   protected readonly devButton = CHAPTER_DEV_BUTTON;
   protected readonly debugEnabled = signal<boolean>(CHAPTER_DEBUG);
@@ -90,7 +87,6 @@ export class BlueprintWater {
     'Global illumination': 'giEnabled',
   };
   protected readonly visualRows = signal<readonly ReliefRow[]>([]);
-  private readonly pressingLabel = signal(false);
   protected readonly animationTimings = computed(() =>
     resolveChapterTimings(this.timings(), this.reducedMotion()),
   );
@@ -105,7 +101,7 @@ export class BlueprintWater {
   protected readonly navigationError = signal('');
   protected readonly navigating = signal(false);
   protected readonly busy = computed(
-    () => this.mode() === 'loading' || this.snapshot().stage === 'filling',
+    () => this.mode() === 'loading' || this.snapshot().stage === 'animating',
   );
   protected readonly hint = computed(() => {
     if (this.mode() === 'loading') return CHAPTER_TEXT.loading;
@@ -113,7 +109,7 @@ export class BlueprintWater {
       return 'Camera mode: drag to rotate, right-drag to pan, scroll to zoom. Disable mouse controls to continue.';
     }
     if (this.snapshot().stage === 'completed') return CHAPTER_TEXT.completed;
-    if (this.snapshot().stage === 'filling') return CHAPTER_TEXT.animating;
+    if (this.snapshot().stage === 'animating') return CHAPTER_TEXT.animating;
     return CHAPTER_TEXT.hints[this.snapshot().tap];
   });
   protected readonly announcement = computed(() =>
@@ -134,8 +130,15 @@ export class BlueprintWater {
     });
   }
 
-  protected advance(): void {
-    if (!this.mouseCamera() && !this.busy()) this.chapter?.advance();
+  protected advance(event: MouseEvent): void {
+    if (this.mouseCamera() || this.busy()) return;
+    if (this.snapshot().tap > 0 && event.detail !== 0) {
+      const onLabel = this.scene
+        ? this.scene.isLabelHit(event.clientX, event.clientY)
+        : event.target instanceof Element && !!event.target.closest('[data-pressable="true"]');
+      if (!onLabel) return;
+    }
+    this.chapter?.advance();
   }
 
   protected restart(): void {
@@ -144,12 +147,8 @@ export class BlueprintWater {
     this.chapter?.reset();
   }
 
-  protected newLabel(index: number): boolean {
-    return (
-      this.snapshot().stage === 'filling' &&
-      index === this.visualRows().length - 1 &&
-      this.pressingLabel()
-    );
+  protected pressingRow(index: number): boolean {
+    return this.snapshot().stage === 'animating' && index === this.snapshot().tap - 2;
   }
 
   protected changeView(key: (typeof CHAPTER_VIEW_SLIDERS)[number]['key'], event: Event): void {
@@ -250,11 +249,8 @@ export class BlueprintWater {
       window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false,
     );
     if (typeof WebGL2RenderingContext !== 'undefined') {
-      const scene = new ReliefScene(
-        this.host().nativeElement,
-        this.animationTimings(),
-        this.reducedMotion(),
-        (error) => this.zone.run(() => this.useFallback(error)),
+      const scene = new ReliefScene(this.host().nativeElement, this.animationTimings(), (error) =>
+        this.zone.run(() => this.useFallback(error)),
       );
       this.scene = scene;
       try {
@@ -274,31 +270,8 @@ export class BlueprintWater {
     }
     if (this.disposed) return;
     const visual: ChapterVisual = {
-      present: (rows, done) => {
-        const generation = ++this.visualGeneration;
-        if (rows.length > 1) {
-          const labelRows = rows.map((row, index) =>
-            index === rows.length - 1 ? { ...row, value: '' } : row,
-          );
-          this.presentRows(
-            labelRows,
-            () => {
-              if (this.disposed || generation !== this.visualGeneration) return;
-              this.timer = setTimeout(() => {
-                this.timer = null;
-                if (!this.disposed && generation === this.visualGeneration) {
-                  this.presentRows(rows, done, false);
-                }
-              }, this.animationTimings().labelValueDelayMs);
-            },
-            true,
-          );
-        } else {
-          this.presentRows(rows, done, !rows[0]?.value);
-        }
-      },
+      present: (rows, done) => this.presentRows(rows, done),
       reset: () => {
-        this.visualGeneration++;
         this.clearTimer();
         this.pendingDone = null;
         this.visualRows.set([]);
@@ -316,9 +289,8 @@ export class BlueprintWater {
     );
   }
 
-  private presentRows(rows: readonly ReliefRow[], done: () => void, label: boolean): void {
+  private presentRows(rows: readonly ReliefRow[], done: () => void): void {
     this.visualRows.set(rows);
-    this.pressingLabel.set(label);
     const complete = () =>
       this.zone.run(() => {
         this.pendingDone = null;
@@ -332,24 +304,21 @@ export class BlueprintWater {
         this.useFallback(error);
       }
     } else {
-      this.preview(rows, complete);
+      this.preview(complete);
     }
   }
 
-  private preview(rows: readonly ReliefRow[], done: () => void): void {
+  private preview(done: () => void): void {
     this.clearTimer();
-    this.timer = setTimeout(
-      () => {
-        this.timer = null;
-        this.pendingDone = null;
-        done();
-      },
-      chapterRevealDuration(this.animationTimings(), !!rows.at(-1)?.value),
-    );
+    this.timer = setTimeout(() => {
+      this.timer = null;
+      this.pendingDone = null;
+      done();
+    }, chapterRevealDuration(this.animationTimings()));
   }
 
   private useFallback(error: unknown): void {
-    console.error('The recessed-text GPU water scene is unavailable.', error);
+    console.error('The relief-text scene is unavailable.', error);
     this.scene?.dispose();
     this.scene = null;
     this.mouseCamera.set(false);
@@ -357,7 +326,7 @@ export class BlueprintWater {
     this.mode.set('fallback');
     this.notice.set(CHAPTER_TEXT.gpuFailed);
     const done = this.pendingDone;
-    if (done) this.preview(this.visualRows(), done);
+    if (done) this.preview(done);
   }
 
   private clearTimer(): void {

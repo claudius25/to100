@@ -1,9 +1,11 @@
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { routes } from '../app.routes';
 import { GameEngine } from '../simulation/model/game-engine';
 import { Home } from '../home/home';
+import { LandscapeViewport } from '../landscape-viewport/landscape-viewport';
 import { GamePage } from './game';
 
 function finishSlide(element: HTMLElement): void {
@@ -128,6 +130,15 @@ describe('GamePage', () => {
     const dialog = element.querySelector<HTMLDialogElement>('dialog')!;
     expect(dialog.open).toBe(true);
     expect(dialog.textContent).toContain(next.history[0].resolvedStep!.title);
+    const viewport = fixture.debugElement
+      .query(By.directive(LandscapeViewport))
+      .injector.get(LandscapeViewport);
+    viewport.portraitChange.emit(true);
+    expect(dialog.open).toBe(false);
+    expect(rollButton.disabled).toBe(true);
+    viewport.portraitChange.emit(false);
+    expect(dialog.open).toBe(true);
+    expect(roll).toHaveBeenCalledOnce();
     expect(element.querySelector('.encounter')).toBe(oldBoardId);
     dialog.querySelector('button')!.click();
     await fixture.whenStable();

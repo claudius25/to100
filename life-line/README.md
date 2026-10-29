@@ -47,6 +47,8 @@ open debug panel instead. Controls account for device safe-area insets.
 On portrait touch devices, a **Rotate your phone** screen blocks interaction until
 the device is landscape. It does not reset the chapter or game. Turn off the device's
 rotation lock if necessary. Desktop portrait windows remain usable.
+An active game encounter popup temporarily closes in portrait and reopens when
+landscape resumes, without acknowledging the encounter or rolling again.
 
 Where supported, **Fullscreen** requests fullscreen from a user tap, then attempts
 to lock touch devices to landscape. Orientation locking is browser-dependent and
@@ -55,38 +57,38 @@ without the required APIs. Unsupported or rejected requests show manual-rotation
 guidance. Fullscreen is optional: manually rotating still works in the normal browser.
 Exiting fullscreen releases any orientation lock acquired by the page.
 
-## Liquid blueprint / Chapter 1
+## Raised-label blueprint / Chapter 1
 
 Open **http://localhost:4200/blueprint-water**, or choose **Chapter 1 · Liquid
 blueprint** on the home page. This is a separate standalone `BlueprintWater`
 component, not a replacement for the tower.
 
-The scene starts as a blank surface. Six taps (or Enter/Space on the scene)
-reveal:
+The scene starts as a blank surface. Six taps (or Enter/Space on the scene) reveal:
 
-1. Recessed `Name:` only.
-2. One of exactly 100 unique short male names (3–6 letters), filling with blue water.
-3. `Health:` with a 1–4 level and the existing trait label, filling green.
-4. `Finance:` with its level/label, filling yellow-orange.
-5. `Emotions:` with its level/label, filling pink-red.
-6. `Social:` with its level/label, filling purple.
+1. `NAME:` rises out of the ground as a pressable text button.
+2. Press `NAME:`: it sinks into the ground alongside a randomly selected short male
+   name, while `HEALTH:` rises on the next row.
+3. Press `HEALTH:`: it and its 1–4 level/description sink while `FINANCE:` rises.
+4. Press `FINANCE:`: it and its value sink while `EMOTIONS:` rises.
+5. Press `EMOTIONS:`: it and its value sink while `SOCIAL:` rises.
+6. Press `SOCIAL:`: it and its value sink, completing the chapter.
 
-Labels are dry, right-aligned recesses; values share a separate left-aligned
-column with a fixed gap. Existing rows remain visible. Each result is sampled once;
-filling locks further taps. Start over cancels pending work and clears the surface.
-The scene button is keyboard-accessible and a live region announces the results.
+Only the currently raised label accepts pointer/touch presses after the initial tap;
+its bounding rectangle has a small hit-area padding. Keyboard Enter/Space activates
+the current label through the accessible scene button. Labels remain right-aligned;
+values share a separate left-aligned column with a fixed gap. All settled text is
+dry and recessed: there are no liquid surfaces, water simulation or fill delays.
+Existing rows remain visible. Each result is sampled once; animation locks further
+taps. Start over cancels pending work and clears the surface. A live region announces
+the results.
 The chapter UI contains the tappable scene, a **Fullscreen** control where supported,
-the optional **DEV** button and, after completion, the **Begin life** button, all
+the optional **DEV** button and, after completion, the bottom-right **Begin life** button, all
 overlaid on the scene. Tap instructions and row announcements remain available to
 screen readers. Navigation failures are still shown as alerts.
 
-New letters do not pop into full-depth holes: their floors begin flush with the
-surface and ease downward, continuously exposing the recess walls. Existing text
-stays still. Once the press-in finishes, the liquid waits briefly, rises from the
-bottom, and gradually develops opacity and its final color from a clear state.
-For Health, Finance, Emotions and Social, each tap first presses in only the label,
-waits `labelValueDelayMs` after that reveal settles, then presses in and fills the
-value. The next tap stays locked until both phases finish.
+New values begin flush with the surface and ease downward, continuously exposing
+the recess walls. The pressed label descends from its raised position at the same
+time as the value sinks and the next label rises. Previously recessed rows stay still.
 
 ### Tweaking Chapter 1
 
@@ -95,15 +97,14 @@ Edit `src/app/blueprint-water/chapter.constants.ts`:
 - `MALE_NAMES`: the 100 short male names.
 - `CHAPTER_TEXT`, `CHAPTER_TRAITS`, `CHAPTER_LEVEL_LABELS`: chapter copy, row labels,
   and level wording. Level wording is shared with the original tower.
-- `CHAPTER_COLORS`: the five liquid colors, clear-liquid color and ground/text colors.
-- `CHAPTER_TIMINGS`: `pressMs` (1100), `labelValueDelayMs` (400),
-  `fillDelayMs` (180), `fillMs` (1800), and
-  `settleMs` (180). All values are milliseconds. Label-only taps skip liquid timings.
-- `CHAPTER_LIQUID`: target fill height, final opacity, `clearOpacity` (how visible the
-  clear liquid is when it starts rising), fraction of the rise spent clear before color
-  develops, and surface finish.
+- `CHAPTER_COLORS`: ground/text colors and retained trait color metadata.
+- `CHAPTER_TIMINGS`: `pressMs` (240) for simultaneous rise/press motion and
+  `settleMs` (40) before accepting the next press. All values are milliseconds.
+  Both the 3D scene and 2D preview use cubic ease-out for quick keyboard-like travel
+  that slows smoothly into its final position.
 - `CHAPTER_SCENE`: `fontSize` (0.62, Three.js world units; also scales 2D preview
-  text), recess depth, row spacing, column positions and `framingPadding` (0.1).
+  text), `recessDepth` (0.24), `raisedHeight` (0.24), `labelHitPadding` (0.12),
+  row spacing, column positions and `framingPadding` (0.1).
   Both camera projections cap the configured zoom to fit the complete five-row layout,
   including every possible name and trait value, on load and resize. Framing is
   reserved before the first tap, so revealing rows does not move the camera.
@@ -116,34 +117,28 @@ Edit `src/app/blueprint-water/chapter.constants.ts`:
 - `CHAPTER_DEV_BUTTON` (default `true`): shows a **DEV** button at the top centre in
   development and production builds that shows or hides those tools at runtime (turning
   them off also stops FPS sampling and mouse camera controls). Set to `false` to hide it.
-- `CHAPTER_STATS` (requires `CHAPTER_DEBUG`): the FPS overlay in the top-left corner. `visible` (shown on
+- `CHAPTER_STATS` (requires visible dev tools): the FPS overlay in the top-left corner. `visible` (shown on
   load; toggle with "Show FPS stats"), `sampleMs` (refresh/averaging window) and
   `slowFrameMs` (frames slower than this count as slow). The overlay shows FPS, average
   and worst frame time, CPU time per frame, idle/moving activity and pixel ratio, canvas
   size, whether the GI pass ran, and draw calls/triangles per frame.
 - `CHAPTER_QUALITY`: lightweight rendering defaults: `curveSegments` (12),
-  `maxPixelRatio` (1.5) and `shadowMapSize` (2048). The higher pixel-ratio cap improves
+  `maxPixelRatio` (2) and `shadowMapSize` (2048). The higher pixel-ratio cap improves
   sharpness on high-density mobile displays at additional GPU cost. Renderer antialiasing is enabled;
   multisampled post-processing and supersampling are disabled; resolution does not increase when
   idle. `giAoIntensity` defaults to 0 so the idle scene keeps the same render path as
-  the animation. Raise it in the dev controls to enable AO only while idle. Text and
-  liquid reveal animations are unchanged.
+  the animation. Raise it in the dev controls to enable AO only while idle.
 - `CHAPTER_MOUSE`: rotation and scroll-zoom sensitivity for the dev mouse controller.
 - `giEnabled`, `giEnvironment`, `giAoIntensity`, `giAoRadius` (in `CHAPTER_VIEW`): a
   WebGL global-illumination approximation that combines RoomEnvironment image-based
   bounce light with optional GTAO ambient occlusion. Environment bounce is on by
   default; ambient occlusion is off by default for performance. Three's true screen-space GI
-  (`SSGINode`) requires `WebGPURenderer` and is not compatible with this WebGL water scene.
-- `CHAPTER_WATER`: GPU mask size and damping, plus the always-on liquid motion that
-  needs no touch or hover. `rippleIntervalMs`/`dropsPerRipple`/`impulse`/`rippleRadius`
-  control the automatic drops, `maxAmplitude` caps their height, and `swellAmplitude`,
-  `swellSpeed` and `swellWavelength` control a constant rolling swell. Heights are
-  also limited by the space above the liquid, so it never spills over the surface.
+  (`SSGINode`) requires `WebGPURenderer` and is not compatible with this WebGL scene.
 - `CHAPTER_SCENE.plateSize` (80): width and height of the ground plate.
 
 The component also accepts a partial `[timings]` override. The same timing/pose
-helpers drive the GPU scene and the 2D preview's schedule. Reduced motion caps
-press and fill at 120ms each, skips the delays, and disables continuing ripples.
+helpers drive the 3D scene and the 2D preview's schedule. Reduced motion caps
+the simultaneous rise/press at 120ms and skips the settling delay.
 
 With `npm start` (Angular development mode), tap **DEV** at the top (or set `CHAPTER_DEBUG = true`), then expand **Dev: camera & lights** at
 the top-right of the scene. Toggle orthographic/perspective and use the live sliders
@@ -152,8 +147,8 @@ its shadows. Reset restores `CHAPTER_VIEW`; zoom remains capped to keep all text
 visible. **Start over** resets the chapter. The panel includes selectable JSON:
 copy those values into `CHAPTER_VIEW` to keep your preferred view. The sliders
 do not alter chapter results or reset on a new chapter; they reset on page reload.
-They require WebGL and are disabled in the 2D fallback. The entire panel is absent
-in production mode (`npm run build`), while the configured defaults still apply.
+They require WebGL and are disabled in the 2D fallback. The DEV button also works
+in production when `CHAPTER_DEV_BUTTON` is enabled.
 Enable **Mouse camera controls** in that same dev panel to left-drag to rotate,
 right-drag/middle-drag/Shift-drag to pan on the ground plane, and scroll to zoom.
 Mouse movements update the sliders and settings JSON in either projection.
@@ -170,16 +165,11 @@ Family finances do not grant personal money, and starting condition values remai
 Implementation under `src/app/blueprint-water/`:
 
 - `blueprint-chapter.ts`: Angular-free six-tap sequence, names, typed rows and result.
-- `relief-scene.ts`: actual inset letter geometry, liquid surfaces, lighting,
-  responsive framing, pointer ripples, and renderer/geometry cleanup.
-- `gpu-water.ts`: the supplied scene's masked GPU heightfield recurrence, adapted
-  to the project's Three.js version. A 256×256 mask confines waves to value glyphs,
-  including letter counters. Static wall shadows are recomputed on row or light changes.
+- `relief-scene.ts`: raised and inset letter geometry, label hit-testing, lighting,
+  responsive framing and renderer/geometry cleanup. Shadows update during text motion.
 - `hero-blueprint.ts`: validated router-history handoff and the explicit scale adapter.
 
-Water rises in recess depth (Z), as in the supplied archive; this is a surface-wave
-simulation, not a volumetric fluid/overflow solver. Reduced motion uses a short fill
-without continuing ripples. Missing WebGL2, GPU initialization failure, or context
+Missing WebGL2, renderer initialization failure, or context
 loss displays an explicit notice and switches to an animated 2D preview using the
 same sequence/results. Renderer failures are also logged to the console.
 

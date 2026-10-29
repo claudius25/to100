@@ -1,5 +1,5 @@
 import { BlueprintChapter, type ReliefRow, type WaterBlueprintResult } from './blueprint-chapter';
-import { MALE_NAMES } from './chapter.constants';
+import { CHAPTER_TEXT, CHAPTER_TRAITS, MALE_NAMES } from './chapter.constants';
 import { readBlueprintChapter, toHeroStartingState } from './hero-blueprint';
 import { GameEngine } from '../simulation/model/game-engine';
 
@@ -43,7 +43,7 @@ describe('BlueprintChapter', () => {
       chapter.advance();
       finish();
       chapter.advance();
-      expect(chapter.snapshot.rows[0].value).toBe(name);
+      expect(chapter.snapshot.rows[0].value).toBe(name.toUpperCase());
     }
   });
 
@@ -51,31 +51,45 @@ describe('BlueprintChapter', () => {
     const ctx = setup();
     expect(ctx.chapter.snapshot.rows).toEqual([]);
     ctx.chapter.advance();
-    expect(ctx.chapter.snapshot.rows).toEqual([{ label: 'Name:', value: '', color: '#198bdd' }]);
+    expect(ctx.chapter.snapshot.rows).toEqual([
+      { label: CHAPTER_TEXT.nameLabel, value: '', raised: true },
+    ]);
     expect(ctx.random).not.toHaveBeenCalled();
     expect(ctx.chapter.advance()).toBe(false);
     ctx.finish();
     ctx.chapter.advance();
     expect(ctx.random).toHaveBeenCalledTimes(1);
-    expect(ctx.chapter.snapshot.rows[0].value).toBe('Adam');
+    expect(ctx.chapter.snapshot.rows[0]).toEqual({
+      label: CHAPTER_TEXT.nameLabel,
+      value: MALE_NAMES[0].toUpperCase(),
+      raised: false,
+    });
+    expect(ctx.chapter.snapshot.rows[1]).toEqual({
+      label: CHAPTER_TRAITS[0].label,
+      value: '',
+      raised: true,
+    });
     expect(ctx.chapter.advance()).toBe(false);
     ctx.finish();
     for (let i = 0; i < 4; i++) {
       expect(ctx.chapter.advance()).toBe(true);
       expect(ctx.chapter.advance()).toBe(false);
+      const raised = ctx.chapter.snapshot.rows.filter((row) => row.raised);
+      expect(raised.map((row) => row.label)).toEqual(i < 3 ? [CHAPTER_TRAITS[i + 1].label] : []);
+      expect(ctx.chapter.snapshot.rows[i + 1].value).not.toBe('');
       ctx.finish();
     }
-    expect(ctx.chapter.snapshot.rows.map((row) => [row.label, row.value, row.color])).toEqual([
-      ['Name:', 'Adam', '#198bdd'],
-      ['Health:', '1. Fragile', '#20b967'],
-      ['Finance:', '2. Modest', '#f4a51c'],
-      ['Emotions:', '3. Steady', '#ec507c'],
-      ['Social:', '4. Connector', '#9554e9'],
+    expect(ctx.chapter.snapshot.rows.map((row) => [row.label, row.value, row.raised])).toEqual([
+      [CHAPTER_TEXT.nameLabel, MALE_NAMES[0].toUpperCase(), false],
+      [CHAPTER_TRAITS[0].label, '1. Fragile', false],
+      [CHAPTER_TRAITS[1].label, '2. Modest', false],
+      [CHAPTER_TRAITS[2].label, '3. Steady', false],
+      [CHAPTER_TRAITS[3].label, '4. Connector', false],
     ]);
     expect(ctx.random).toHaveBeenCalledTimes(5);
     expect(ctx.chapter.stage).toBe('completed');
     expect(ctx.completed).toHaveBeenCalledExactlyOnceWith({
-      name: 'Adam',
+      name: MALE_NAMES[0].toUpperCase(),
       blueprint: { healthBlueprint: 1, familyFinances: 2, emotionalResilience: 3, socialSkills: 4 },
     });
     expect(ctx.chapter.advance()).toBe(false);
@@ -83,7 +97,7 @@ describe('BlueprintChapter', () => {
     expect(ctx.frames[0][0].value).toBe('');
     const snapshot = ctx.chapter.snapshot;
     snapshot.rows[0].value = 'Changed';
-    expect(ctx.chapter.snapshot.rows[0].value).toBe('Adam');
+    expect(ctx.chapter.snapshot.rows[0].value).toBe(MALE_NAMES[0].toUpperCase());
   });
 
   it('ignores callbacks after reset or destruction and starts blank again', () => {
@@ -101,7 +115,7 @@ describe('BlueprintChapter', () => {
     expect(ctx.reset).toHaveBeenCalledTimes(2);
   });
 
-  it('emits completion only after the final liquid has filled', () => {
+  it('emits completion only after the final label and value have recessed', () => {
     const ctx = setup();
     for (let i = 0; i < 5; i++) {
       ctx.chapter.advance();

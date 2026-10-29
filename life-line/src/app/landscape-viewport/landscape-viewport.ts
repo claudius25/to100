@@ -6,6 +6,7 @@ import {
   DestroyRef,
   ElementRef,
   inject,
+  output,
   signal,
 } from '@angular/core';
 
@@ -20,6 +21,7 @@ type LandscapeOrientation = ScreenOrientation & {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LandscapeViewport {
+  readonly portraitChange = output<boolean>();
   private readonly document = inject(DOCUMENT);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly destroyRef = inject(DestroyRef);
@@ -37,7 +39,11 @@ export class LandscapeViewport {
       const window = this.document.defaultView;
       if (!window) return;
       const portrait = window.matchMedia?.('(orientation: portrait) and (any-pointer: coarse)');
-      const updatePortrait = () => this.portraitBlocked.set(portrait?.matches ?? false);
+      const updatePortrait = () => {
+        const blocked = portrait?.matches ?? false;
+        this.portraitBlocked.set(blocked);
+        this.portraitChange.emit(blocked);
+      };
       updatePortrait();
       portrait?.addEventListener('change', updatePortrait);
       this.fullscreenAvailable.set(typeof this.host.nativeElement.requestFullscreen === 'function');

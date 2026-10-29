@@ -19,7 +19,7 @@ describe('Chapter camera controls', () => {
       clientWidth: { configurable: true, value: 1200 },
       clientHeight: { configurable: true, value: 600 },
     });
-    scene = new ReliefScene(host, { ...CHAPTER_TIMINGS }, false, vi.fn());
+    scene = new ReliefScene(host, { ...CHAPTER_TIMINGS }, vi.fn());
   });
 
   afterEach(() => {
@@ -28,6 +28,7 @@ describe('Chapter camera controls', () => {
   });
 
   it('switches projections without changing framing at the target plane', () => {
+    scene.setView({ ...CHAPTER_VIEW, orthographic: false });
     const target = new Vector3(CHAPTER_VIEW.panX, CHAPTER_VIEW.panY, -0.05);
     const point = target.clone().add(new Vector3(1, 0, 0));
     const perspectivePoint = point.clone().project(scene.camera);

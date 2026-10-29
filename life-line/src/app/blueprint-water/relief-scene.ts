@@ -1,14 +1,10 @@
 import {
   AmbientLight,
   Box3,
-  BufferGeometry,
-  Color,
   DirectionalLight,
   ExtrudeGeometry,
-  Float32BufferAttribute,
   Group,
   Mesh,
-  MeshPhysicalMaterial,
   MeshStandardMaterial,
   LinearToneMapping,
   Path,
@@ -28,17 +24,14 @@ import {
   type Texture,
 } from 'three';
 import { FontLoader, type Font, type FontData } from 'three/addons/loaders/FontLoader.js';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import type { ChapterVisual, ReliefRow } from './blueprint-chapter';
-import { GpuWater, WATER_BOUNDS, WATER_SIZE } from './gpu-water';
 import {
   CHAPTER_COLORS,
-  CHAPTER_LIQUID,
   CHAPTER_MOUSE,
   CHAPTER_QUALITY,
   CHAPTER_STATS,
@@ -48,7 +41,6 @@ import {
   CHAPTER_TRAITS,
   CHAPTER_VIEW,
   CHAPTER_VIEW_SLIDERS,
-  CHAPTER_WATER,
   MALE_NAMES,
   type ChapterTimings,
   type ChapterViewSettings,
@@ -56,50 +48,11 @@ import {
 import { chapterRevealPose } from './chapter-animation';
 
 const DEPTH = CHAPTER_SCENE.recessDepth;
-const FILL = CHAPTER_LIQUID.targetFill;
 const PLATE_HALF_SIZE = CHAPTER_SCENE.plateSize / 2;
-const SWELL_K = (2 * Math.PI) / CHAPTER_WATER.swellWavelength;
 
-interface LiquidSurface {
-  meshes: Mesh<BufferGeometry, MeshPhysicalMaterial>[];
-  material: MeshPhysicalMaterial;
-  targetColor: Color;
-  uniforms: {
-    heightmap: { value: Texture | null };
-    fillLevel: { value: number };
-    time: { value: number };
-    motion: { value: number };
-  };
-}
-
-function waterGeometry(outline: Shape): BufferGeometry {
-  const source = new ShapeGeometry(outline, 12);
-  const position = source.attributes['position'];
-  const index = source.index;
-  if (!index) throw new Error('The glyph geometry must be triangulated.');
-  const positions: number[] = [];
-  function split(a: Vector3, b: Vector3, c: Vector3, depth: number): void {
-    if (depth === 0) {
-      positions.push(...a.toArray(), ...b.toArray(), ...c.toArray());
-      return;
-    }
-    const ab = a.clone().add(b).multiplyScalar(0.5);
-    const bc = b.clone().add(c).multiplyScalar(0.5);
-    const ca = c.clone().add(a).multiplyScalar(0.5);
-    split(a, ab, ca, depth - 1);
-    split(ab, b, bc, depth - 1);
-    split(ca, bc, c, depth - 1);
-    split(ab, bc, ca, depth - 1);
-  }
-  for (let i = 0; i < index.count; i += 3) {
-    const vertex = (j: number) => new Vector3().fromBufferAttribute(position, index.getX(i + j));
-    split(vertex(0), vertex(1), vertex(2), 3);
-  }
-  source.dispose();
-  const result = new BufferGeometry();
-  result.setAttribute('position', new Float32BufferAttribute(positions, 3));
-  result.computeVertexNormals();
-  return result;
+interface TextMotion {
+  mesh: Mesh<ExtrudeGeometry, MeshStandardMaterial>;
+  kind: 'raise' | 'label' | 'value';
 }
 
 export interface ReliefFrameStats {
@@ -121,7 +74,7 @@ export interface ReliefFrameStats {
   triangles: number;
 }
 
-/** Recessed glyphs cut into a plate, with GPU waves confined to the value glyphs. */
+/** Raised glyph buttons press into a plate alongside their newly revealed values. */
 export class ReliefScene implements ChapterVisual {
   private readonly scene = new Scene();
   private readonly group = new Group();
@@ -133,7 +86,6 @@ export class ReliefScene implements ChapterVisual {
     color: CHAPTER_COLORS.surface,
     roughness: 0.92,
   });
-  private readonly clearLiquid = new Color(CHAPTER_COLORS.clearLiquid);
   private readonly key = new DirectionalLight(0xffffff, 3.2);
   private readonly edge = new DirectionalLight(0xffffff, 1);
   private readonly ambient = new AmbientLight(0xffffff, 1);
@@ -147,14 +99,12 @@ export class ReliefScene implements ChapterVisual {
   private readonly abort = new AbortController();
   private renderer: WebGLRenderer | null = null;
   private font: Font | null = null;
-  private water: GpuWater | null = null;
-  private liquids: LiquidSurface[] = [];
+  private motions: TextMotion[] = [];
+  private labelBounds: Box3 | null = null;
   private done: (() => void) | null = null;
   private disposed = false;
-  private fillStartedAt = 0;
+  private revealStartedAt = 0;
   private lastTime = 0;
-  private active: LiquidSurface | null = null;
-  private pressed: Mesh<ShapeGeometry, MeshStandardMaterial> | null = null;
   private rows: readonly ReliefRow[] = [];
   private mouseViewChanged: ((settings: ChapterViewSettings) => void) | null = null;
   private drag: { pointerId: number; x: number; y: number; pan: boolean } | null = null;
@@ -164,7 +114,6 @@ export class ReliefScene implements ChapterVisual {
   constructor(
     private readonly host: HTMLElement,
     private readonly timings: ChapterTimings,
-    private readonly reducedMotion: boolean,
     private readonly failed: (error: unknown) => void,
   ) {
     this.observer = new ResizeObserver(() => this.resize());
@@ -304,9 +253,6 @@ export class ReliefScene implements ChapterVisual {
     this.font = new FontLoader().parse(data);
     this.prepareFramingBounds();
     this.renderer = new WebGLRenderer({ antialias: true });
-    if (!this.renderer.extensions.has('EXT_color_buffer_float')) {
-      throw new Error('GPU water requires floating-point render targets.');
-    }
     this.renderer.setClearColor(CHAPTER_COLORS.surface);
     this.renderer.toneMapping = LinearToneMapping;
     this.renderer.toneMappingExposure = 0.55;
@@ -321,9 +267,6 @@ export class ReliefScene implements ChapterVisual {
     this.renderer.domElement.setAttribute('aria-hidden', 'true');
     this.renderer.domElement.style.display = 'block';
     this.host.appendChild(this.renderer.domElement);
-    // Probe floating-point render targets before the first user interaction.
-    const probe = new GpuWater(this.renderer, []);
-    probe.dispose();
     this.reset();
     this.observer.observe(this.host);
     this.host.addEventListener('pointermove', this.pointerMove);
@@ -339,43 +282,30 @@ export class ReliefScene implements ChapterVisual {
     this.clear();
     this.rows = structuredClone([...rows]);
     const all: Shape[] = [];
-    const valueShapes: Shape[] = [];
-    const newShapes: Shape[] = [];
     for (const [index, row] of rows.entries()) {
       const y = CHAPTER_SCENE.rowTop - index * CHAPTER_SCENE.rowGap;
       const labels = this.glyphs(row.label, y, true);
       all.push(...labels);
-      if (previousRows[index]?.label !== row.label) newShapes.push(...labels);
+      if (row.raised) {
+        const mesh = this.textSolid(labels);
+        this.setTextHeight(mesh, previousRows[index]?.raised ? CHAPTER_SCENE.raisedHeight : 0);
+        if (!previousRows[index]?.raised) this.motions.push({ mesh, kind: 'raise' });
+        this.labelBounds = mesh.geometry.boundingBox!.clone();
+        this.labelBounds.expandByScalar(CHAPTER_SCENE.labelHitPadding);
+      } else if (previousRows[index]?.raised) {
+        this.motions.push({ mesh: this.textSolid(labels), kind: 'label' });
+      }
       const values = this.glyphs(row.value, y, false);
       all.push(...values);
-      valueShapes.push(...values);
-      if (previousRows[index]?.value !== row.value) newShapes.push(...values);
-      if (values.length) {
-        const surface = this.liquid(row.color, values);
-        const fresh = previousRows[index]?.value !== row.value;
-        surface.uniforms.fillLevel.value = fresh ? 0 : FILL;
-        surface.material.opacity = fresh ? 0 : CHAPTER_LIQUID.opacity;
-        if (!fresh) surface.material.color.copy(surface.targetColor);
-        this.setFill(surface);
-        this.liquids.push(surface);
-        if (fresh) this.active = surface;
+      if (values.length && previousRows[index]?.value !== row.value) {
+        this.motions.push({ mesh: this.textSolid(values), kind: 'value' });
       }
     }
     this.buildPlate(all);
-    // Flush caps initially hide the new cavities, then descend to expose their walls.
-    this.pressed = new Mesh(new ShapeGeometry(newShapes, 12), this.plateMaterial);
-    this.pressed.receiveShadow = true;
-    this.group.add(this.pressed);
-    if (valueShapes.length) {
-      this.water = new GpuWater(this.renderer, valueShapes);
-      for (const surface of this.liquids) surface.uniforms.heightmap.value = this.water.texture;
-    }
-    // Warm the new shader while the glyph floors are still flush, not during the rise.
-    for (const mesh of this.active?.meshes ?? []) mesh.visible = true;
+    this.updateTextPose(0);
     this.renderer.compile(this.scene, this.camera);
     this.renderer.render(this.scene, this.camera);
-    if (this.active) this.setFill(this.active);
-    this.fillStartedAt = performance.now();
+    this.revealStartedAt = performance.now();
     this.done = done;
   }
 
@@ -446,6 +376,7 @@ export class ReliefScene implements ChapterVisual {
       }
     }
     this.framingBounds.min.z = -DEPTH - 0.002;
+    this.framingBounds.max.z = CHAPTER_SCENE.raisedHeight;
   }
 
   private buildPlate(outlines: readonly Shape[]): void {
@@ -464,7 +395,7 @@ export class ReliefScene implements ChapterVisual {
       new ExtrudeGeometry([plate, ...islands], {
         depth: DEPTH,
         bevelEnabled: false,
-        curveSegments: 12,
+        curveSegments: CHAPTER_QUALITY.curveSegments,
       }),
       this.plateMaterial,
     );
@@ -481,78 +412,61 @@ export class ReliefScene implements ChapterVisual {
     if (this.renderer) this.renderer.shadowMap.needsUpdate = true;
   }
 
-  private liquid(color: string, outlines: readonly Shape[]): LiquidSurface {
-    const material = new MeshPhysicalMaterial({
-      color: CHAPTER_COLORS.clearLiquid,
-      transparent: true,
-      opacity: 0,
-      depthWrite: false,
-      roughness: CHAPTER_LIQUID.roughness,
-      metalness: CHAPTER_LIQUID.metalness,
-      clearcoat: CHAPTER_LIQUID.clearcoat,
-      clearcoatRoughness: 0.08,
+  private textSolid(outlines: readonly Shape[]): Mesh<ExtrudeGeometry, MeshStandardMaterial> {
+    const geometry = new ExtrudeGeometry([...outlines], {
+      depth: DEPTH + CHAPTER_SCENE.raisedHeight,
+      bevelEnabled: false,
+      curveSegments: CHAPTER_QUALITY.curveSegments,
     });
-    const uniforms = {
-      heightmap: { value: null as Texture | null },
-      fillLevel: { value: 0 },
-      motion: { value: this.reducedMotion ? 0 : 1 },
-      time: { value: 0 },
-    };
-    material.onBeforeCompile = (shader) => {
-      Object.assign(shader.uniforms, uniforms);
-      shader.vertexShader =
-        `
-        uniform sampler2D heightmap;
-        uniform float fillLevel, motion, time;
-        float waterHeight(vec2 p) { return texture2D(heightmap, p / ${WATER_BOUNDS.toFixed(1)} + .5).r; }
-        // Two crossing travelling waves keep the surface moving without any input.
-        float swell(vec2 p) {
-          float k = ${SWELL_K.toFixed(4)}, w = ${CHAPTER_WATER.swellSpeed.toFixed(4)};
-          return sin(p.x * k + time * w) * .6 + sin((p.x * .55 - p.y * .85) * k * 1.3 - time * w * 1.2) * .4;
-        }
-      ` + shader.vertexShader;
-      shader.vertexShader = shader.vertexShader.replace(
-        '#include <beginnormal_vertex>',
-        `
-        #include <beginnormal_vertex>
-        float headroom = ${DEPTH} * min(fillLevel, 1.0 - fillLevel) * .8;
-        float amp = motion * min(${CHAPTER_WATER.maxAmplitude.toFixed(4)}, headroom);
-        float swellAmp = motion * min(${CHAPTER_WATER.swellAmplitude.toFixed(4)}, headroom * .5);
-        float cell = ${WATER_BOUNDS.toFixed(1)} / ${WATER_SIZE.toFixed(1)};
-        float dx = (waterHeight(position.xy + vec2(cell, 0)) - waterHeight(position.xy - vec2(cell, 0))) * amp / (2.0 * cell)
-          + (swell(position.xy + vec2(cell, 0)) - swell(position.xy - vec2(cell, 0))) * swellAmp / (2.0 * cell);
-        float dy = (waterHeight(position.xy + vec2(0, cell)) - waterHeight(position.xy - vec2(0, cell))) * amp / (2.0 * cell)
-          + (swell(position.xy + vec2(0, cell)) - swell(position.xy - vec2(0, cell))) * swellAmp / (2.0 * cell);
-        objectNormal = normalize(vec3(-dx, -dy, 1.0));
-      `,
-      );
-      shader.vertexShader = shader.vertexShader.replace(
-        '#include <begin_vertex>',
-        `
-        #include <begin_vertex>
-        transformed.z += amp * waterHeight(position.xy) + swellAmp * swell(position.xy);
-      `,
-      );
-    };
-    const parts = outlines.map(waterGeometry);
-    const geometry = mergeGeometries(parts);
-    parts.forEach((part) => part.dispose());
-    if (!geometry) {
-      material.dispose();
-      throw new Error('Could not combine the liquid glyph surfaces.');
-    }
-    const mesh = new Mesh(geometry, material);
+    geometry.computeBoundingBox();
+    const mesh = new Mesh(geometry, this.plateMaterial);
+    mesh.position.z = -DEPTH;
+    mesh.castShadow = true;
     mesh.receiveShadow = true;
     this.group.add(mesh);
-    const meshes = [mesh];
-    return { meshes, material, uniforms, targetColor: new Color(color) };
+    return mesh;
   }
 
-  private setFill(surface: LiquidSurface): void {
-    for (const mesh of surface.meshes) {
-      mesh.position.z = -DEPTH * (1 - surface.uniforms.fillLevel.value);
-      mesh.visible = surface.uniforms.fillLevel.value > 0;
+  private setTextHeight(mesh: Mesh<ExtrudeGeometry, MeshStandardMaterial>, height: number): void {
+    mesh.visible = height > -DEPTH;
+    mesh.scale.z = Math.max(0.00001, (height + DEPTH) / (DEPTH + CHAPTER_SCENE.raisedHeight));
+  }
+
+  private updateTextPose(elapsed: number): boolean {
+    const pose = chapterRevealPose(elapsed, this.timings);
+    for (const { mesh, kind } of this.motions) {
+      this.setTextHeight(
+        mesh,
+        kind === 'raise' ? pose.raisedZ : kind === 'label' ? pose.labelZ : pose.valueZ,
+      );
     }
+    if (this.renderer) this.renderer.shadowMap.needsUpdate = true;
+    return pose.completed;
+  }
+
+  isLabelHit(clientX: number, clientY: number): boolean {
+    if (!this.labelBounds || this.done || this.disposed) return false;
+    const rect = this.host.getBoundingClientRect();
+    if (!rect.width || !rect.height) return false;
+    this.raycaster.setFromCamera(
+      new Vector2(
+        ((clientX - rect.left) / rect.width) * 2 - 1,
+        -((clientY - rect.top) / rect.height) * 2 + 1,
+      ),
+      this.camera,
+    );
+    const hit = this.raycaster.ray.intersectPlane(
+      new Plane(new Vector3(0, 0, 1), -CHAPTER_SCENE.raisedHeight),
+      new Vector3(),
+    );
+    if (!hit) return false;
+    const local = this.group.worldToLocal(hit);
+    return (
+      local.x >= this.labelBounds.min.x &&
+      local.x <= this.labelBounds.max.x &&
+      local.y >= this.labelBounds.min.y &&
+      local.y <= this.labelBounds.max.y
+    );
   }
 
   private readonly frame = (ms: number): void => {
@@ -561,28 +475,9 @@ export class ReliefScene implements ChapterVisual {
     try {
       const dt = this.lastTime ? Math.min((ms - this.lastTime) / 1000, 0.1) : 0;
       this.lastTime = ms;
-      if (this.water) {
-        if (!this.reducedMotion) this.water.step(dt);
-        for (const surface of this.liquids) {
-          surface.uniforms.heightmap.value = this.water.texture;
-          surface.uniforms.time.value = ms / 1000;
-        }
-      }
       if (this.done) {
-        const elapsed = Math.max(0, ms - this.fillStartedAt);
-        const pose = chapterRevealPose(elapsed, this.timings, this.active !== null);
-        if (this.pressed) this.pressed.position.z = pose.floorZ;
-        if (this.active) {
-          this.active.uniforms.fillLevel.value = pose.fillLevel;
-          this.active.material.opacity = pose.opacity;
-          this.active.material.color.lerpColors(
-            this.clearLiquid,
-            this.active.targetColor,
-            pose.tint,
-          );
-          this.setFill(this.active);
-        }
-        if (pose.completed) {
+        const elapsed = Math.max(0, ms - this.revealStartedAt);
+        if (this.updateTextPose(elapsed)) {
           const done = this.done;
           this.done = null;
           done();
@@ -642,16 +537,13 @@ export class ReliefScene implements ChapterVisual {
 
   private clear(): void {
     this.done = null;
-    this.active = null;
-    this.pressed = null;
-    this.water?.dispose();
-    this.water = null;
+    this.motions = [];
+    this.labelBounds = null;
+    this.host.style.cursor = '';
     for (const child of [...this.group.children]) {
       if (child instanceof Mesh) child.geometry.dispose();
       this.group.remove(child);
     }
-    for (const surface of this.liquids) surface.material.dispose();
-    this.liquids = [];
   }
 
   private resize(): void {
@@ -720,20 +612,7 @@ export class ReliefScene implements ChapterVisual {
       this.moveCamera(event);
       return;
     }
-    if (!this.water || this.reducedMotion) return;
-    const rect = this.host.getBoundingClientRect();
-    this.raycaster.setFromCamera(
-      new Vector2(
-        ((event.clientX - rect.left) / rect.width) * 2 - 1,
-        -((event.clientY - rect.top) / rect.height) * 2 + 1,
-      ),
-      this.camera,
-    );
-    const ray = this.raycaster.ray;
-    const hit = ray.at((-DEPTH * (1 - FILL) - ray.origin.z) / ray.direction.z, new Vector3());
-    // Water coordinates are in the plane's local space, which may be rotated.
-    const local = this.group.worldToLocal(hit);
-    this.water.disturb(local.x, local.y);
+    this.host.style.cursor = this.isLabelHit(event.clientX, event.clientY) ? 'pointer' : '';
   };
 
   private readonly cameraPointerDown = (event: PointerEvent): void => {
@@ -817,6 +696,6 @@ export class ReliefScene implements ChapterVisual {
 
   private readonly contextLost = (event: Event): void => {
     event.preventDefault();
-    this.failed(new Error('The GPU water scene lost its WebGL context.'));
+    this.failed(new Error('The relief scene lost its WebGL context.'));
   };
 }
