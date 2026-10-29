@@ -31,9 +31,35 @@ or reset, even while the previous board is being used for the presentation-only
 slide. The texture and silhouette are local SVG artwork; no Three.js is used here.
 
 Each visit starts a new in-memory game with the model's default blueprint (all four
-traits at 50). The separate starting-blueprint dice prototype is not imported or
-converted to the model's trait scale. Leaving/reloading the page loses the session;
+traits at 50). The `/starting-blueprint` tower (1–4 levels) is not imported or
+converted to the model's 0–100 trait scale. Leaving/reloading the page loses the session;
 there is no save/load yet. New game resets all model state and upcoming encounters.
+
+## Starting blueprint
+
+Open **http://localhost:4200/starting-blueprint**. Four nested Three.js cubes reveal
+the starting traits in order: health blueprint, family finances, emotional
+resilience, social skills (levels 1–4, equally likely). Press the active cube or the
+button below it; a single state machine (`ready → spinning → waiting → revealing →
+ready`, then `done`) drives both. One second after each result, the next cube rises
+from inside the previous one, flies clear of its closing flaps, and lands.
+
+- `blueprint-tower/blueprint-tower.ts`: standalone `BlueprintTower` component with
+  `traitDetermined` (once per roll), `blueprintCompleted` (once, `BlueprintResult`),
+  and `restarted` outputs. It never touches Hero or game state.
+- `blueprint-tower/blueprint-sequence.ts`: Angular-free state machine; samples each
+  result once per accepted press and ignores stale callbacks after reset/destroy.
+- `blueprint-tower/tower-animation.ts`: timings and pure pose math (spin, nested
+  reveal, flaps, landing). Defaults follow the prototype; `[timings]` can override them.
+  `prefers-reduced-motion` uses a short spin/reveal with no wobble or bounce.
+- `blueprint-tower/tower-scene.ts` and `face-textures.ts`: renderer, canvas-drawn
+  faces, picking, `ResizeObserver` framing, and full GPU/DOM disposal.
+- Without WebGL, the same sequence drives a simplified 2D tower with a notice.
+
+`StartingBlueprintPage.onBlueprintCompleted` receives the `BlueprintResult` and
+re-emits it through `beginLife` when **Begin life** is pressed. There is no store yet,
+and no adapter to the simulation Hero's 0–100 blueprint (`physicalResilience`, etc.)
+has been defined, so none is invented.
 
 ## TO100 simulation
 

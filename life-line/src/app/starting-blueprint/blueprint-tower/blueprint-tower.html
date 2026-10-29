@@ -1,0 +1,65 @@
+<div class="tower">
+  <div #stage class="tower__stage">
+    @if (renderMode() === 'fallback') {
+      <div class="fallback" aria-hidden="true">
+        @for (cube of fallbackCubes(); track cube.index) {
+          <div
+            class="fallback__cube"
+            [class.fallback__cube--spinning]="cube.spinning"
+            [class.fallback__cube--emerging]="cube.emerging"
+            [class.fallback__cube--pressable]="cube.pressable"
+            [style.background]="cube.trait.color"
+            [style.width.px]="cube.size"
+            [style.height.px]="cube.size"
+            [attr.data-cube]="cube.index"
+            (click)="press(cube.index)"
+          >
+            <span class="fallback__name">{{ cube.trait.name }}</span>
+            @if (cube.result && !cube.spinning) {
+              <span class="fallback__level"
+                >{{ cube.result.label }} · {{ cube.result.level }}/{{ levelCount }}</span
+              >
+            }
+          </div>
+        }
+      </div>
+      <p class="tower__notice">3D view unavailable — showing a simplified tower.</p>
+    }
+  </div>
+
+  <aside class="tower__results" aria-label="Blueprint results">
+    @for (row of rows(); track row.trait.key) {
+      <div class="row">
+        <span class="row__dot" [style.background]="row.trait.color"></span>
+        <div>
+          <div class="row__label">{{ row.trait.name }}</div>
+          <div class="row__value">{{ row.value }}</div>
+        </div>
+      </div>
+    }
+  </aside>
+
+  <footer class="tower__footer">
+    <button
+      type="button"
+      class="tower__roll"
+      [disabled]="!canAct()"
+      [attr.aria-busy]="!canAct()"
+      (click)="primaryAction()"
+    >
+      {{ buttonLabel() }}
+    </button>
+    <p class="tower__hint">{{ hint() }}</p>
+  </footer>
+
+  <button
+    type="button"
+    class="tower__reset"
+    [disabled]="renderMode() === 'pending'"
+    (click)="restart()"
+  >
+    ↻ Start again
+  </button>
+
+  <p class="sr-only" role="status" aria-live="polite">{{ announcement() }}</p>
+</div>

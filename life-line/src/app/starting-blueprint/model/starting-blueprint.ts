@@ -1,102 +1,116 @@
 /**
- * Starting traits rolled before a life begins. These describe starting
- * circumstances only — they are deliberately kept separate from in-game
- * resources such as money or energy, and no formula converts between them.
+ * Starting traits revealed before a life begins. They describe starting
+ * circumstances only and are deliberately kept separate from in-game resources
+ * such as health, money or mood. No formula converts between them yet.
  */
-export interface StartingBlueprint {
-  healthBlueprint: number;
-  familyFinances: number;
-  emotionalResilience: number;
-  socialSkills: number;
+export type BlueprintTraitKey =
+  'healthBlueprint' | 'familyFinances' | 'emotionalResilience' | 'socialSkills';
+
+export type BlueprintLevel = 1 | 2 | 3 | 4;
+
+export interface TraitResult {
+  trait: BlueprintTraitKey;
+  level: BlueprintLevel;
+  label: string;
 }
 
-export type TraitKey = keyof StartingBlueprint;
-
-export type TraitIcon = 'battery' | 'coin' | 'shield' | 'bubbles';
-
-export interface TraitCardConfig {
-  readonly key: TraitKey;
-  readonly title: string;
-  /** Used for screen readers and the live announcement. */
-  readonly label: string;
-  readonly description: string;
-  readonly icon: TraitIcon;
-  /** CSS colour driving the icon fill and the filled pips. */
-  readonly accent: string;
+export interface BlueprintResult {
+  healthBlueprint: BlueprintLevel;
+  familyFinances: BlueprintLevel;
+  emotionalResilience: BlueprintLevel;
+  socialSkills: BlueprintLevel;
 }
 
-export const DIE_FACES = 6;
+export interface BlueprintTraitConfig {
+  readonly key: BlueprintTraitKey;
+  readonly name: string;
+  readonly color: string;
+  readonly colorName: string;
+  readonly levels: readonly [string, string, string, string];
+}
 
-export const TRAIT_CARDS: readonly TraitCardConfig[] = [
+export type RandomSource = () => number;
+
+export const BLUEPRINT_LEVEL_COUNT = 4;
+
+/** Tower order: the first entry is the bottom cube. */
+export const BLUEPRINT_TRAITS: readonly BlueprintTraitConfig[] = [
   {
     key: 'healthBlueprint',
-    title: 'HEALTH BLUEPRINT',
-    label: 'Health Blueprint',
-    description: 'How quickly you recover and recharge.',
-    icon: 'battery',
-    accent: '#3ac45f',
+    name: 'Health blueprint',
+    color: '#16B85A',
+    colorName: 'green',
+    levels: ['Fragile', 'Sensitive', 'Healthy', 'Robust'],
   },
   {
     key: 'familyFinances',
-    title: 'FAMILY FINANCES',
-    label: 'Family Finances',
-    description: 'Your access to education and opportunities.',
-    icon: 'coin',
-    accent: '#f6c33d',
+    name: 'Family finances',
+    color: '#FF9418',
+    colorName: 'orange',
+    levels: ['Limited', 'Modest', 'Comfortable', 'Abundant'],
   },
   {
     key: 'emotionalResilience',
-    title: 'EMOTIONAL RESILIENCE',
-    label: 'Emotional Resilience',
-    description: 'How you cope with setbacks.',
-    icon: 'shield',
-    accent: '#fb6f5c',
+    name: 'Emotional resilience',
+    color: '#EF3545',
+    colorName: 'red',
+    levels: ['Sensitive', 'Developing', 'Steady', 'Resilient'],
   },
   {
     key: 'socialSkills',
-    title: 'SOCIAL SKILLS',
-    label: 'Social Skills',
-    description: 'How you connect and build friendships.',
-    icon: 'bubbles',
-    accent: '#aa9cf2',
+    name: 'Social skills',
+    color: '#923FEA',
+    colorName: 'purple',
+    levels: ['Reserved', 'Warming up', 'Outgoing', 'Connector'],
   },
 ];
 
-export const TRAIT_KEYS: readonly TraitKey[] = TRAIT_CARDS.map((card) => card.key);
+export const BLUEPRINT_TRAIT_KEYS: readonly BlueprintTraitKey[] = BLUEPRINT_TRAITS.map(
+  (trait) => trait.key,
+);
 
-/**
- * One fair six-sided die.
- *
- * Uses rejection sampling on `crypto` so the result is uniform: plain
- * `byte % 6` would make 1-4 slightly more likely than 5-6.
- */
-export function rollDie(): number {
+/** Uniform value in [0, 1); 2^32 is divisible by 4, so level sampling stays fair. */
+export function secureRandom(): number {
   const source = globalThis.crypto;
   if (source?.getRandomValues) {
-    const buffer = new Uint8Array(1);
-    const limit = 252; // 42 * 6, the largest multiple of 6 under 256
-    let value = limit;
-    do {
-      source.getRandomValues(buffer);
-      value = buffer[0];
-    } while (value >= limit);
-    return (value % DIE_FACES) + 1;
+    return source.getRandomValues(new Uint32Array(1))[0] / 2 ** 32;
   }
-  return Math.floor(Math.random() * DIE_FACES) + 1;
+  return Math.random();
 }
 
-/** Rolls every trait independently. Pure: no animation, no component state. */
-export function rollBlueprint(): StartingBlueprint {
+export function rollLevel(random: RandomSource = secureRandom): BlueprintLevel {
+  const index = Math.min(BLUEPRINT_LEVEL_COUNT - 1, Math.max(0, Math.floor(random() * 4)));
+  return (index + 1) as BlueprintLevel;
+}
+
+export function traitResult(index: number, level: BlueprintLevel): TraitResult {
+  const trait = BLUEPRINT_TRAITS[index];
+  return { trait: trait.key, level, label: trait.levels[level - 1] };
+}
+
+export function describeTraitResult(result: TraitResult): string {
+  const name = BLUEPRINT_TRAITS.find((trait) => trait.key === result.trait)?.name ?? result.trait;
+  return `${name}: ${result.label}, level ${result.level} of ${BLUEPRINT_LEVEL_COUNT}`;
+}
+
+/** Returns null until every trait has exactly one result. */
+export function toBlueprintResult(results: readonly TraitResult[]): BlueprintResult | null {
+  const levels = new Map(results.map((result) => [result.trait, result.level]));
+  if (results.length !== BLUEPRINT_TRAIT_KEYS.length || levels.size !== results.length) {
+    return null;
+  }
+  const value = (key: BlueprintTraitKey) => levels.get(key);
+  const health = value('healthBlueprint');
+  const finances = value('familyFinances');
+  const emotional = value('emotionalResilience');
+  const social = value('socialSkills');
+  if (!health || !finances || !emotional || !social) {
+    return null;
+  }
   return {
-    healthBlueprint: rollDie(),
-    familyFinances: rollDie(),
-    emotionalResilience: rollDie(),
-    socialSkills: rollDie(),
+    healthBlueprint: health,
+    familyFinances: finances,
+    emotionalResilience: emotional,
+    socialSkills: social,
   };
-}
-
-export function describeTrait(label: string, value: number | null): string {
-  return value === null
-    ? `${label}: not rolled yet`
-    : `${label}: ${value} out of ${DIE_FACES}`;
 }

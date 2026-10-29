@@ -1,80 +1,74 @@
-import { BlueprintReveal } from './model/blueprint-reveal';
+import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { provideRouter } from '@angular/router';
+import { BlueprintTower } from './blueprint-tower/blueprint-tower';
 import {
-  DIE_FACES,
-  describeTrait,
-  rollBlueprint,
-  TRAIT_KEYS,
-  type TraitKey,
+  BLUEPRINT_TRAITS,
+  rollLevel,
+  toBlueprintResult,
+  traitResult,
+  type BlueprintResult,
 } from './model/starting-blueprint';
+import { StartingBlueprintPage } from './starting-blueprint';
 
-describe('rollBlueprint', () => {
-  it('returns an integer from 1 to 6 for every trait', () => {
-    const seen = new Map<TraitKey, Set<number>>(TRAIT_KEYS.map((key) => [key, new Set<number>()]));
+describe('starting blueprint model', () => {
+  it('samples levels 1-4 with equal-width buckets', () => {
+    expect([0, 0.2499, 0.25, 0.5, 0.75, 0.9999].map((value) => rollLevel(() => value))).toEqual([
+      1, 1, 2, 3, 4, 4,
+    ]);
+    expect(rollLevel(() => 1)).toBe(4);
+  });
 
-    for (let i = 0; i < 2000; i++) {
-      const blueprint = rollBlueprint();
-      for (const key of TRAIT_KEYS) {
-        const value = blueprint[key];
-        expect(Number.isInteger(value)).toBe(true);
-        expect(value).toBeGreaterThanOrEqual(1);
-        expect(value).toBeLessThanOrEqual(DIE_FACES);
-        seen.get(key)?.add(value);
-      }
-    }
+  it('produces every level from the default random source', () => {
+    const seen = new Set(Array.from({ length: 400 }, () => rollLevel()));
+    expect([...seen].sort()).toEqual([1, 2, 3, 4]);
+  });
 
-    // Every face should turn up for every trait, i.e. they are rolled independently.
-    for (const key of TRAIT_KEYS) {
-      expect(seen.get(key)?.size).toBe(DIE_FACES);
-    }
+  it('builds a blueprint only from one result per trait', () => {
+    const results = BLUEPRINT_TRAITS.map((_, index) => traitResult(index, 2));
+    expect(toBlueprintResult(results)).toEqual({
+      healthBlueprint: 2,
+      familyFinances: 2,
+      emotionalResilience: 2,
+      socialSkills: 2,
+    });
+    expect(toBlueprintResult(results.slice(0, 3))).toBeNull();
   });
 });
 
-describe('describeTrait', () => {
-  it('describes rolled and unrolled traits', () => {
-    expect(describeTrait('Social Skills', 4)).toBe('Social Skills: 4 out of 6');
-    expect(describeTrait('Social Skills', null)).toBe('Social Skills: not rolled yet');
-  });
-});
+describe('StartingBlueprintPage', () => {
+  const blueprint: BlueprintResult = {
+    healthBlueprint: 3,
+    familyFinances: 1,
+    emotionalResilience: 4,
+    socialSkills: 2,
+  };
 
-describe('BlueprintReveal', () => {
-  it('reveals every trait immediately when reduced motion is requested', () => {
-    const reveal = new BlueprintReveal();
-    const revealed: TraitKey[] = [];
-    let completed = 0;
-    let ticks = 0;
+  it('receives the completed tower result and begins life once', async () => {
+    TestBed.configureTestingModule({ providers: [provideRouter([])] });
+    const fixture = TestBed.createComponent(StartingBlueprintPage);
+    const begun: BlueprintResult[] = [];
+    fixture.componentInstance.beginLife.subscribe((result) => begun.push(result));
+    await fixture.whenStable();
+    const element = fixture.nativeElement as HTMLElement;
+    const tower = fixture.debugElement.query(By.directive(BlueprintTower))
+      .componentInstance as BlueprintTower;
 
-    reveal.start(
-      TRAIT_KEYS,
-      {
-        onTick: () => ticks++,
-        onReveal: (key) => revealed.push(key),
-        onComplete: () => completed++,
-      },
-      true,
-    );
+    expect(element.querySelector('h1')?.textContent).toContain('Your blueprint.');
+    expect(element.querySelector('.blueprint__begin')).toBeNull();
 
-    expect(revealed).toEqual([...TRAIT_KEYS]);
-    expect(completed).toBe(1);
-    expect(ticks).toBe(0);
-    reveal.cancel();
-  });
+    tower.blueprintCompleted.emit(blueprint);
+    await fixture.whenStable();
+    const begin = element.querySelector<HTMLButtonElement>('.blueprint__begin')!;
+    begin.click();
+    begin.click();
+    await fixture.whenStable();
 
-  it('stops every timer when cancelled', async () => {
-    const reveal = new BlueprintReveal();
-    let calls = 0;
+    expect(begun).toEqual([blueprint]);
+    expect(element.textContent).toContain('Blueprint locked in');
 
-    reveal.start(
-      TRAIT_KEYS,
-      {
-        onTick: () => calls++,
-        onReveal: () => calls++,
-        onComplete: () => calls++,
-      },
-      false,
-    );
-    reveal.cancel();
-
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    expect(calls).toBe(0);
+    tower.restarted.emit();
+    await fixture.whenStable();
+    expect(element.querySelector('.blueprint__begin')).toBeNull();
   });
 });
