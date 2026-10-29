@@ -334,7 +334,7 @@ export const CHAPTER_QUALITY = {
   // How long the scene must be still before enabling the optional GI pass.
   idleDelayMs: 250,
   // Limit supersampling on high-density screens to balance sharpness and performance.
-  maxPixelRatio: 1.5,
+  maxPixelRatio: 2,
   shadowMapSize: 2048,
 } as const;
 
