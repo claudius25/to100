@@ -66,7 +66,7 @@ describe('BlueprintWater', () => {
       scene.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
       await fixture.whenStable();
       expect(scene.disabled).toBe(false);
-      const raised = root.querySelector<HTMLElement>('.preview__raised')!;
+      const raised = root.querySelector<HTMLElement>('[data-pressable="true"]')!;
       expect(raised.textContent?.trim()).toBe(label);
       raised.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
       await fixture.whenStable();
@@ -74,12 +74,19 @@ describe('BlueprintWater', () => {
       expect(row.querySelector('.preview__label--pressing')).not.toBeNull();
       expect(row.querySelector('.preview__value')?.textContent?.trim()).not.toBe('');
       expect(scene.disabled).toBe(true);
-      expect(root.querySelector('.preview__raised')?.textContent?.trim() ?? null).toBe(
+      expect(root.querySelector('[data-pressable="true"]')?.textContent?.trim() ?? null).toBe(
         CHAPTER_TRAITS[index]?.label ?? null,
       );
       await waitReady(fixture);
     }
     expect(root.querySelector('.begin')).not.toBeNull();
+    expect(root.querySelectorAll('.preview__raised')).toHaveLength(5);
+    expect(root.querySelector('.preview__closing textPath')?.textContent?.trim()).not.toBe('');
+    expect(root.querySelectorAll('.preview__closing')).toHaveLength(1);
+    expect(root.querySelector('#chapter-closing-path')?.getAttribute('d')).toContain(' A ');
+    expect(root.querySelector('.chapter')?.getAttribute('style')).toContain(
+      '--appearance-duration',
+    );
   });
 
   it('cancels an active reveal on reset and destruction', async () => {

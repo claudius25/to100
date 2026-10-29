@@ -170,9 +170,40 @@ export const CHAPTER_TIMINGS: Readonly<ChapterTimings> = {
 };
 export const CHAPTER_REDUCED_MOTION_MS = 120;
 
+export const CHAPTER_APPEARANCE = {
+  fadeMs: 650,
+} as const;
+
+export const CHAPTER_CLOSING_TEXTS = [
+  'Every beginning holds a thousand possibilities. Your story is waiting for its first adventure.',
+  'A name, a spark, a world to discover. The next chapter belongs to you and the choices you make.',
+  'Small steps can lead to extraordinary places. Take your time and make this journey your own.',
+  'No two lives follow the same road. Yours begins here, with room for surprises around every corner.',
+  'The future is not written in stone. Bring curiosity, courage, and a little kindness along the way.',
+  'This is only the starting point. There are friendships to find and unexpected paths to explore.',
+  'A whole lifetime stretches ahead. Gather little moments and see what kind of story they become.',
+  'Your beginnings are part of your story, not its ending. There is still so much for you to discover.',
+  'Some days will challenge you, others will surprise you. Keep moving toward your next possibility.',
+  'Here starts a life like no other. Make space for new adventures and the people you meet along the way.',
+] as const;
+
+export const CHAPTER_PATH_TEXT = {
+  fontSize: 0.32,
+  color: '#B8B8B8',
+  belowSocial: 0.65,
+  valueClearance: 0.45,
+  letterSpacing: 0.015,
+  surfaceOffset: 0.003,
+  bendRadius: 0.65,
+  // Baseline of the final rightward run, relative to the Name row baseline.
+  nameTurnOffset: 0,
+} as const;
+
 export const CHAPTER_SCENE = {
   recessDepth: 0.24,
   raisedHeight: 0.24,
+  // Key travel stays well above the plane at the deepest point of a press.
+  keyTravel: 0.15,
   // Extra world-space padding around a label's tappable rectangle.
   labelHitPadding: 0.12,
   labelEdge: -1.35,

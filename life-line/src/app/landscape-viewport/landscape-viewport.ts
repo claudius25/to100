@@ -29,6 +29,7 @@ export class LandscapeViewport {
   private disposed = false;
 
   protected readonly portraitBlocked = signal(false);
+  protected readonly launched = signal(false);
   protected readonly fullscreenAvailable = signal(false);
   protected readonly fullscreen = signal(false);
   protected readonly requestingFullscreen = signal(false);
@@ -63,15 +64,12 @@ export class LandscapeViewport {
     });
   }
 
-  protected async toggleFullscreen(): Promise<void> {
+  protected async play(): Promise<void> {
     if (this.requestingFullscreen()) return;
     this.requestingFullscreen.set(true);
     this.fullscreenNotice.set('');
     try {
-      if (this.fullscreen()) {
-        await this.document.exitFullscreen();
-        return;
-      }
+      if (!this.fullscreenAvailable() || this.fullscreen()) return;
       await this.host.nativeElement.requestFullscreen();
       if (this.disposed) return;
       const window = this.document.defaultView;
@@ -97,6 +95,7 @@ export class LandscapeViewport {
         'Fullscreen is unavailable. You can still play by rotating your device to landscape.',
       );
     } finally {
+      if (!this.disposed) this.launched.set(true);
       this.requestingFullscreen.set(false);
     }
   }

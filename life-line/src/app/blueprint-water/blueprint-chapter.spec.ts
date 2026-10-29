@@ -1,5 +1,10 @@
 import { BlueprintChapter, type ReliefRow, type WaterBlueprintResult } from './blueprint-chapter';
-import { CHAPTER_TEXT, CHAPTER_TRAITS, MALE_NAMES } from './chapter.constants';
+import {
+  CHAPTER_CLOSING_TEXTS,
+  CHAPTER_TEXT,
+  CHAPTER_TRAITS,
+  MALE_NAMES,
+} from './chapter.constants';
 import { readBlueprintChapter, toHeroStartingState } from './hero-blueprint';
 import { GameEngine } from '../simulation/model/game-engine';
 
@@ -47,7 +52,7 @@ describe('BlueprintChapter', () => {
     }
   });
 
-  it('starts blank, reveals only Name on tap 1, and samples once on each later tap', () => {
+  it('starts blank, reveals Name first, and samples each result and the closing phrase once', () => {
     const ctx = setup();
     expect(ctx.chapter.snapshot.rows).toEqual([]);
     ctx.chapter.advance();
@@ -86,7 +91,9 @@ describe('BlueprintChapter', () => {
       [CHAPTER_TRAITS[2].label, '3. Steady', false],
       [CHAPTER_TRAITS[3].label, '4. Connector', false],
     ]);
-    expect(ctx.random).toHaveBeenCalledTimes(5);
+    expect(ctx.random).toHaveBeenCalledTimes(6);
+    expect(CHAPTER_CLOSING_TEXTS).toHaveLength(10);
+    expect(ctx.chapter.snapshot.closingText).toBe(CHAPTER_CLOSING_TEXTS[0]);
     expect(ctx.chapter.stage).toBe('completed');
     expect(ctx.completed).toHaveBeenCalledExactlyOnceWith({
       name: MALE_NAMES[0].toUpperCase(),
@@ -106,7 +113,7 @@ describe('BlueprintChapter', () => {
     const stale = ctx.callbacks.shift()!;
     ctx.chapter.reset();
     stale();
-    expect(ctx.chapter.snapshot).toEqual({ stage: 'ready', tap: 0, rows: [] });
+    expect(ctx.chapter.snapshot).toEqual({ stage: 'ready', tap: 0, rows: [], closingText: '' });
     ctx.chapter.advance();
     ctx.chapter.destroy();
     ctx.finish();
@@ -115,7 +122,7 @@ describe('BlueprintChapter', () => {
     expect(ctx.reset).toHaveBeenCalledTimes(2);
   });
 
-  it('emits completion only after the final label and value have recessed', () => {
+  it('emits completion only after the final key has released and its value has recessed', () => {
     const ctx = setup();
     for (let i = 0; i < 5; i++) {
       ctx.chapter.advance();
@@ -127,6 +134,35 @@ describe('BlueprintChapter', () => {
     done();
     done();
     expect(ctx.completed).toHaveBeenCalledTimes(1);
+  });
+
+  it('selects both ends of the closing-text list once and clears the choice on reset', () => {
+    for (const [sample, index] of [
+      [0, 0],
+      [0.99999, 9],
+    ]) {
+      const ctx = setup([0, 0, 0, 0, 0, sample]);
+      for (let i = 0; i < 6; i++) {
+        ctx.chapter.advance();
+        ctx.finish();
+      }
+      expect(ctx.chapter.snapshot.closingText).toBe(CHAPTER_CLOSING_TEXTS[index]);
+      ctx.chapter.advance();
+      expect(ctx.random).toHaveBeenCalledTimes(6);
+      ctx.chapter.reset();
+      expect(ctx.chapter.snapshot.closingText).toBe('');
+    }
+  });
+
+  it('rejects invalid closing-text randomness without changing the last ready state', () => {
+    const ctx = setup([0, 0, 0, 0, 0, NaN]);
+    for (let i = 0; i < 5; i++) {
+      ctx.chapter.advance();
+      ctx.finish();
+    }
+    const before = ctx.chapter.snapshot;
+    expect(() => ctx.chapter.advance()).toThrow('Random source');
+    expect(ctx.chapter.snapshot).toEqual(before);
   });
 });
 

@@ -1,28 +1,25 @@
 <div
   class="viewport-content"
-  [class.viewport-content--blocked]="portraitBlocked()"
-  [inert]="portraitBlocked()"
+  [class.viewport-content--blocked]="portraitBlocked() || !launched()"
+  [inert]="portraitBlocked() || !launched()"
 >
   <ng-content />
 </div>
-@if (portraitBlocked()) {
-  <section class="rotate-prompt" aria-labelledby="rotate-title" role="status">
-    <span class="rotate-prompt__icon" aria-hidden="true">&#8635;</span>
-    <h1 id="rotate-title">Rotate your phone</h1>
-    <p>TO100 is played in landscape. Turn your device sideways to continue.</p>
-    <p>You may need to turn off your device's rotation lock.</p>
+@if (portraitBlocked() || !launched()) {
+  <section class="rotate-prompt" aria-label="TO100 launcher">
+    <img class="launcher-image" src="assets/launcher.png" alt="TO100" />
+    <button
+      type="button"
+      class="fullscreen-toggle"
+      [disabled]="requestingFullscreen()"
+      (click)="play()"
+    >
+      Play
+    </button>
+    @if (portraitBlocked()) {
+      <p class="sr-only" role="status">Rotate your device to landscape to continue.</p>
+    }
   </section>
-}
-@if (fullscreenAvailable()) {
-  <button
-    type="button"
-    class="fullscreen-toggle"
-    [attr.aria-pressed]="fullscreen()"
-    [disabled]="requestingFullscreen()"
-    (click)="toggleFullscreen()"
-  >
-    {{ fullscreen() ? 'Exit fullscreen' : 'Fullscreen' }}
-  </button>
 }
 @if (fullscreenNotice()) {
   <p class="fullscreen-notice" role="status">{{ fullscreenNotice() }}</p>

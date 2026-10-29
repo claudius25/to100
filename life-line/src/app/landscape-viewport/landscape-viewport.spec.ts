@@ -39,7 +39,12 @@ describe('LandscapeViewport', () => {
     await fixture.whenStable();
     const content = fixture.nativeElement.querySelector('.viewport-content') as HTMLElement;
     expect(content.inert).toBe(true);
-    expect(fixture.nativeElement.textContent).toContain('Rotate your phone');
+    expect(fixture.nativeElement.querySelector('.launcher-image').getAttribute('src')).toBe(
+      'assets/launcher.png',
+    );
+    fixture.nativeElement.querySelector('.fullscreen-toggle').click();
+    await fixture.whenStable();
+    expect(content.inert).toBe(true);
 
     portrait = false;
     onOrientationChange?.();
@@ -50,11 +55,15 @@ describe('LandscapeViewport', () => {
     expect(removeOrientationListener).toHaveBeenCalled();
   });
 
-  it('omits fullscreen when the browser does not support it', async () => {
+  it('still launches from Play when fullscreen is unsupported', async () => {
     const fixture = TestBed.createComponent(LandscapeViewport);
     Object.defineProperty(fixture.nativeElement, 'requestFullscreen', { value: undefined });
     await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('.viewport-content').inert).toBe(true);
+    fixture.nativeElement.querySelector('.fullscreen-toggle').click();
+    await fixture.whenStable();
     expect(fixture.nativeElement.querySelector('.fullscreen-toggle')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.viewport-content').inert).toBe(false);
   });
 
   it('requests landscape after entering fullscreen and releases its lock on exit', async () => {
@@ -77,7 +86,7 @@ describe('LandscapeViewport', () => {
     await fixture.whenStable();
     expect(request).toHaveBeenCalledOnce();
     expect(lock).toHaveBeenCalledWith('landscape');
-    expect(fixture.nativeElement.querySelector('button').textContent).toContain('Exit fullscreen');
+    expect(fixture.nativeElement.querySelector('.rotate-prompt')).toBeNull();
 
     fullscreenElement = null;
     document.dispatchEvent(new Event('fullscreenchange'));
@@ -97,5 +106,6 @@ describe('LandscapeViewport', () => {
       'Fullscreen is unavailable',
     );
     expect(warn).toHaveBeenCalled();
+    expect(fixture.nativeElement.querySelector('.viewport-content').inert).toBe(false);
   });
 });

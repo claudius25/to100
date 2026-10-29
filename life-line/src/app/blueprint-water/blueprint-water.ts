@@ -26,6 +26,9 @@ import {
 import { ReliefScene, type ReliefFrameStats } from './relief-scene';
 import {
   CHAPTER_COLORS,
+  CHAPTER_APPEARANCE,
+  CHAPTER_PATH_TEXT,
+  CHAPTER_REDUCED_MOTION_MS,
   CHAPTER_DEBUG,
   CHAPTER_DEV_BUTTON,
   CHAPTER_SCENE,
@@ -65,6 +68,21 @@ export class BlueprintWater {
   protected readonly text = CHAPTER_TEXT;
   protected readonly colors = CHAPTER_COLORS;
   protected readonly fontScale = CHAPTER_SCENE.fontSize / 0.62;
+  protected readonly pressedLabelY =
+    -4 * (1 - Math.min(CHAPTER_SCENE.keyTravel / CHAPTER_SCENE.raisedHeight, 1));
+  protected readonly closingPath = (() => {
+    const radius = CHAPTER_PATH_TEXT.bendRadius * 100;
+    const nameY = 60;
+    return (
+      `M 75 555 H ${930 - radius} A ${radius} ${radius} 0 0 0 930 ${555 - radius} ` +
+      `V ${nameY + radius} A ${radius} ${radius} 0 0 1 ${930 + radius} ${nameY} H 1000`
+    );
+  })();
+  protected readonly appearanceMs = computed(() =>
+    this.reducedMotion()
+      ? Math.min(CHAPTER_REDUCED_MOTION_MS, CHAPTER_APPEARANCE.fadeMs)
+      : CHAPTER_APPEARANCE.fadeMs,
+  );
   protected readonly devButton = CHAPTER_DEV_BUTTON;
   protected readonly debugEnabled = signal<boolean>(CHAPTER_DEBUG);
   protected readonly mouseCamera = signal(false);
@@ -96,6 +114,7 @@ export class BlueprintWater {
     stage: 'ready',
     rows: [],
     tap: 0,
+    closingText: '',
   });
   protected readonly result = signal<WaterBlueprintResult | null>(null);
   protected readonly navigationError = signal('');
@@ -249,8 +268,11 @@ export class BlueprintWater {
       window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false,
     );
     if (typeof WebGL2RenderingContext !== 'undefined') {
-      const scene = new ReliefScene(this.host().nativeElement, this.animationTimings(), (error) =>
-        this.zone.run(() => this.useFallback(error)),
+      const scene = new ReliefScene(
+        this.host().nativeElement,
+        this.animationTimings(),
+        (error) => this.zone.run(() => this.useFallback(error)),
+        this.appearanceMs(),
       );
       this.scene = scene;
       try {
@@ -270,7 +292,7 @@ export class BlueprintWater {
     }
     if (this.disposed) return;
     const visual: ChapterVisual = {
-      present: (rows, done) => this.presentRows(rows, done),
+      present: (rows, done, closingText) => this.presentRows(rows, done, closingText),
       reset: () => {
         this.clearTimer();
         this.pendingDone = null;
@@ -289,7 +311,7 @@ export class BlueprintWater {
     );
   }
 
-  private presentRows(rows: readonly ReliefRow[], done: () => void): void {
+  private presentRows(rows: readonly ReliefRow[], done: () => void, closingText?: string): void {
     this.visualRows.set(rows);
     const complete = () =>
       this.zone.run(() => {
@@ -299,7 +321,7 @@ export class BlueprintWater {
     this.pendingDone = complete;
     if (this.scene) {
       try {
-        this.zone.runOutsideAngular(() => this.scene!.present(rows, complete));
+        this.zone.runOutsideAngular(() => this.scene!.present(rows, complete, closingText));
       } catch (error) {
         this.useFallback(error);
       }

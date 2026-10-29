@@ -6,6 +6,7 @@ import {
   Group,
   Mesh,
   MeshStandardMaterial,
+  MeshBasicMaterial,
   LinearToneMapping,
   Path,
   PCFShadowMap,
@@ -32,6 +33,9 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import type { ChapterVisual, ReliefRow } from './blueprint-chapter';
 import {
   CHAPTER_COLORS,
+  CHAPTER_APPEARANCE,
+  CHAPTER_CLOSING_TEXTS,
+  CHAPTER_PATH_TEXT,
   CHAPTER_MOUSE,
   CHAPTER_QUALITY,
   CHAPTER_STATS,
@@ -45,10 +49,49 @@ import {
   type ChapterTimings,
   type ChapterViewSettings,
 } from './chapter.constants';
-import { chapterRevealPose } from './chapter-animation';
+import { chapterFadeOpacity, chapterRevealPose } from './chapter-animation';
 
 const DEPTH = CHAPTER_SCENE.recessDepth;
 const PLATE_HALF_SIZE = CHAPTER_SCENE.plateSize / 2;
+
+/**
+ * Arc-length mapping keeps glyph outlines continuous along: right, a tangent quarter-circle
+ * turning up, then (when `topY` is reached) a second quarter-circle turning right again.
+ */
+export function chapterPathPoint(
+  distance: number,
+  offset: number,
+  startX: number,
+  baseline: number,
+  bendX: number,
+  topY = Infinity,
+): Vector2 {
+  const radius = Math.min(CHAPTER_PATH_TEXT.bendRadius, (bendX - startX) / 2);
+  const straight = bendX - startX - radius;
+  const arcLength = (Math.PI * radius) / 2;
+  if (distance <= straight) return new Vector2(startX + distance, baseline + offset);
+  if (distance < straight + arcLength) {
+    const angle = (distance - straight) / radius;
+    return new Vector2(
+      bendX - radius + (radius - offset) * Math.sin(angle),
+      baseline + radius - (radius - offset) * Math.cos(angle),
+    );
+  }
+  const riseStart = baseline + radius;
+  const topRadius = Math.max(0, Math.min(CHAPTER_PATH_TEXT.bendRadius, topY - riseStart));
+  const rise = topY - topRadius - riseStart;
+  const along = distance - straight - arcLength;
+  if (along <= rise) return new Vector2(bendX - offset, riseStart + along);
+  const topArcLength = (Math.PI * topRadius) / 2;
+  if (along < rise + topArcLength) {
+    const angle = (along - rise) / topRadius;
+    return new Vector2(
+      bendX + topRadius - (topRadius + offset) * Math.cos(angle),
+      topY - topRadius + (topRadius + offset) * Math.sin(angle),
+    );
+  }
+  return new Vector2(bendX + topRadius + along - rise - topArcLength, topY + offset);
+}
 
 interface TextMotion {
   mesh: Mesh<ExtrudeGeometry, MeshStandardMaterial>;
@@ -74,7 +117,7 @@ export interface ReliefFrameStats {
   triangles: number;
 }
 
-/** Raised glyph buttons press into a plate alongside their newly revealed values. */
+/** Raised glyph keys depress and release while their values become recessed. */
 export class ReliefScene implements ChapterVisual {
   private readonly scene = new Scene();
   private readonly group = new Group();
@@ -86,6 +129,14 @@ export class ReliefScene implements ChapterVisual {
     color: CHAPTER_COLORS.surface,
     roughness: 0.92,
   });
+  private readonly captionMaterial = new MeshBasicMaterial({
+    color: CHAPTER_PATH_TEXT.color,
+    transparent: true,
+    opacity: 0,
+    depthWrite: false,
+  });
+  private captionStartedAt: number | null = null;
+  private pathRightEdge = 0;
   private readonly key = new DirectionalLight(0xffffff, 3.2);
   private readonly edge = new DirectionalLight(0xffffff, 1);
   private readonly ambient = new AmbientLight(0xffffff, 1);
@@ -115,6 +166,7 @@ export class ReliefScene implements ChapterVisual {
     private readonly host: HTMLElement,
     private readonly timings: ChapterTimings,
     private readonly failed: (error: unknown) => void,
+    private readonly fadeMs: number = CHAPTER_APPEARANCE.fadeMs,
   ) {
     this.observer = new ResizeObserver(() => this.resize());
     this.scene.add(this.group, this.ambient, this.key, this.edge);
@@ -276,7 +328,7 @@ export class ReliefScene implements ChapterVisual {
     this.renderer.setAnimationLoop(this.frame);
   }
 
-  present(rows: readonly ReliefRow[], done: () => void): void {
+  present(rows: readonly ReliefRow[], done: () => void, closingText = ''): void {
     if (this.disposed || !this.font || !this.renderer) return;
     const previousRows = this.rows;
     this.clear();
@@ -286,14 +338,15 @@ export class ReliefScene implements ChapterVisual {
       const y = CHAPTER_SCENE.rowTop - index * CHAPTER_SCENE.rowGap;
       const labels = this.glyphs(row.label, y, true);
       all.push(...labels);
-      if (row.raised) {
+      if (row.raised || row.value) {
         const mesh = this.textSolid(labels);
-        this.setTextHeight(mesh, previousRows[index]?.raised ? CHAPTER_SCENE.raisedHeight : 0);
-        if (!previousRows[index]?.raised) this.motions.push({ mesh, kind: 'raise' });
-        this.labelBounds = mesh.geometry.boundingBox!.clone();
-        this.labelBounds.expandByScalar(CHAPTER_SCENE.labelHitPadding);
-      } else if (previousRows[index]?.raised) {
-        this.motions.push({ mesh: this.textSolid(labels), kind: 'label' });
+        this.setTextHeight(mesh, CHAPTER_SCENE.raisedHeight);
+        if (row.raised && !previousRows[index]) this.motions.push({ mesh, kind: 'raise' });
+        if (!row.raised && previousRows[index]?.raised) this.motions.push({ mesh, kind: 'label' });
+        if (row.raised) {
+          this.labelBounds = mesh.geometry.boundingBox!.clone();
+          this.labelBounds.expandByScalar(CHAPTER_SCENE.labelHitPadding);
+        }
       }
       const values = this.glyphs(row.value, y, false);
       all.push(...values);
@@ -302,6 +355,16 @@ export class ReliefScene implements ChapterVisual {
       }
     }
     this.buildPlate(all);
+    if (closingText) {
+      this.captionMaterial.opacity = 0;
+      this.captionStartedAt = performance.now();
+      const caption = new Mesh(
+        new ShapeGeometry(this.pathTextShapes(closingText)),
+        this.captionMaterial,
+      );
+      caption.position.z = CHAPTER_PATH_TEXT.surfaceOffset;
+      this.group.add(caption);
+    }
     this.updateTextPose(0);
     this.renderer.compile(this.scene, this.camera);
     this.renderer.render(this.scene, this.camera);
@@ -328,6 +391,7 @@ export class ReliefScene implements ChapterVisual {
     this.clear();
     this.disposeGlobalIllumination();
     this.plateMaterial.dispose();
+    this.captionMaterial.dispose();
     for (const light of [this.key, this.edge]) light.dispose();
     this.renderer?.dispose();
     this.renderer?.domElement.remove();
@@ -375,8 +439,49 @@ export class ReliefScene implements ChapterVisual {
         }
       }
     }
+    this.pathRightEdge = this.framingBounds.max.x;
+    for (const text of CHAPTER_CLOSING_TEXTS) {
+      for (const shape of this.pathTextShapes(text)) {
+        for (const point of shape.getPoints()) {
+          this.framingBounds.expandByPoint(new Vector3(point.x, point.y, 0));
+        }
+      }
+    }
     this.framingBounds.min.z = -DEPTH - 0.002;
     this.framingBounds.max.z = CHAPTER_SCENE.raisedHeight;
+  }
+
+  private pathTextShapes(text: string): Shape[] {
+    const y = CHAPTER_SCENE.rowTop - CHAPTER_TRAITS.length * CHAPTER_SCENE.rowGap;
+    const label = new ShapeGeometry(this.glyphs(CHAPTER_TRAITS.at(-1)!.label, y, true));
+    label.computeBoundingBox();
+    const startX = label.boundingBox!.min.x;
+    const bendX = this.pathRightEdge + CHAPTER_PATH_TEXT.valueClearance;
+    label.dispose();
+    const baseline = y - CHAPTER_PATH_TEXT.belowSocial;
+    // Turn right again once the rising text reaches the Name row.
+    const topY = CHAPTER_SCENE.rowTop + CHAPTER_PATH_TEXT.nameTurnOffset;
+    let distance = 0;
+    const outlines: Shape[] = [];
+    for (const character of text) {
+      const glyph = this.font!.data.glyphs[character] ?? this.font!.data.glyphs['?'];
+      const advance =
+        (glyph.ha / this.font!.data.resolution) * CHAPTER_PATH_TEXT.fontSize +
+        CHAPTER_PATH_TEXT.letterSpacing;
+      const transform = (path: Path) =>
+        path
+          .getPoints(CHAPTER_QUALITY.curveSegments)
+          .map((point) =>
+            chapterPathPoint(distance + point.x, point.y, startX, baseline, bendX, topY),
+          );
+      for (const shape of this.font!.generateShapes(character, CHAPTER_PATH_TEXT.fontSize)) {
+        const outline = new Shape(transform(shape));
+        outline.holes = shape.holes.map((hole) => new Path(transform(hole)));
+        outlines.push(outline);
+      }
+      distance += advance;
+    }
+    return outlines;
   }
 
   private buildPlate(outlines: readonly Shape[]): void {
@@ -429,7 +534,7 @@ export class ReliefScene implements ChapterVisual {
 
   private setTextHeight(mesh: Mesh<ExtrudeGeometry, MeshStandardMaterial>, height: number): void {
     mesh.visible = height > -DEPTH;
-    mesh.scale.z = Math.max(0.00001, (height + DEPTH) / (DEPTH + CHAPTER_SCENE.raisedHeight));
+    mesh.position.z = height - (DEPTH + CHAPTER_SCENE.raisedHeight);
   }
 
   private updateTextPose(elapsed: number): boolean {
@@ -475,6 +580,9 @@ export class ReliefScene implements ChapterVisual {
     try {
       const dt = this.lastTime ? Math.min((ms - this.lastTime) / 1000, 0.1) : 0;
       this.lastTime = ms;
+      if (this.captionStartedAt !== null) {
+        this.captionMaterial.opacity = chapterFadeOpacity(ms - this.captionStartedAt, this.fadeMs);
+      }
       if (this.done) {
         const elapsed = Math.max(0, ms - this.revealStartedAt);
         if (this.updateTextPose(elapsed)) {
@@ -484,7 +592,13 @@ export class ReliefScene implements ChapterVisual {
         }
       }
       const now = performance.now();
-      if (this.done || this.drag) this.lastMotionAt = now;
+      if (
+        this.done ||
+        this.drag ||
+        (this.captionStartedAt !== null && this.captionMaterial.opacity < 1)
+      ) {
+        this.lastMotionAt = now;
+      }
       const idle = now - this.lastMotionAt >= CHAPTER_QUALITY.idleDelayMs;
       const useComposer = this.composer !== null && (idle || !CHAPTER_QUALITY.giOnlyWhenIdle);
       this.renderer.info.reset();
@@ -537,6 +651,8 @@ export class ReliefScene implements ChapterVisual {
 
   private clear(): void {
     this.done = null;
+    this.captionStartedAt = null;
+    this.captionMaterial.opacity = 0;
     this.motions = [];
     this.labelBounds = null;
     this.host.style.cursor = '';

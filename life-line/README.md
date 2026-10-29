@@ -44,13 +44,14 @@ resizing or rotating the device. Controls and debugging panels overlay the scene
 they do not reserve space below it or create a scrolling page. Scroll inside an
 open debug panel instead. Controls account for device safe-area insets.
 
-On portrait touch devices, a **Rotate your phone** screen blocks interaction until
-the device is landscape. It does not reset the chapter or game. Turn off the device's
+On entry, a launcher displays `src/assets/launcher.png` with a centered **Play**
+button. The same image blocks interaction on portrait touch devices until the
+device is landscape. It does not reset the chapter or game. Turn off the device's
 rotation lock if necessary. Desktop portrait windows remain usable.
 An active game encounter popup temporarily closes in portrait and reopens when
 landscape resumes, without acknowledging the encounter or rolling again.
 
-Where supported, **Fullscreen** requests fullscreen from a user tap, then attempts
+Where supported, **Play** requests fullscreen from a user tap, then attempts
 to lock touch devices to landscape. Orientation locking is browser-dependent and
 usually requires fullscreen; it cannot be guaranteed on iPhones or other browsers
 without the required APIs. Unsupported or rejected requests show manual-rotation
@@ -66,29 +67,33 @@ component, not a replacement for the tower.
 The scene starts as a blank surface. Six taps (or Enter/Space on the scene) reveal:
 
 1. `NAME:` rises out of the ground as a pressable text button.
-2. Press `NAME:`: it sinks into the ground alongside a randomly selected short male
-   name, while `HEALTH:` rises on the next row.
-3. Press `HEALTH:`: it and its 1–4 level/description sink while `FINANCE:` rises.
-4. Press `FINANCE:`: it and its value sink while `EMOTIONS:` rises.
-5. Press `EMOTIONS:`: it and its value sink while `SOCIAL:` rises.
-6. Press `SOCIAL:`: it and its value sink, completing the chapter.
+2. Press `NAME:`: it depresses and returns to its raised position; a randomly selected
+   short male name sinks into the ground while `HEALTH:` rises on the next row.
+3. Press `HEALTH:`: it returns after pressing; its 1–4 level/description sinks while `FINANCE:` rises.
+4. Press `FINANCE:`: its value sinks while `EMOTIONS:` rises.
+5. Press `EMOTIONS:`: its value sinks while `SOCIAL:` rises.
+6. Press `SOCIAL:`: its value sinks, completing the chapter. A random black phrase
+   lies flat along an L-shaped path below Social, then turns 90 degrees upward beyond
+   the value column. Letters turn between glyphs so no letter is folded across the corner.
 
 Only the currently raised label accepts pointer/touch presses after the initial tap;
 its bounding rectangle has a small hit-area padding. Keyboard Enter/Space activates
 the current label through the accessible scene button. Labels remain right-aligned;
 values share a separate left-aligned column with a fixed gap. All settled text is
-dry and recessed: there are no liquid surfaces, water simulation or fill delays.
+dry: labels stay raised and values remain recessed, with no liquid surfaces,
+water simulation or fill delays.
 Existing rows remain visible. Each result is sampled once; animation locks further
 taps. Start over cancels pending work and clears the surface. A live region announces
 the results.
-The chapter UI contains the tappable scene, a **Fullscreen** control where supported,
+The chapter UI contains the tappable scene, an initial **Play** launcher,
 the optional **DEV** button and, after completion, the bottom-right **Begin life** button, all
 overlaid on the scene. Tap instructions and row announcements remain available to
 screen readers. Navigation failures are still shown as alerts.
 
 New values begin flush with the surface and ease downward, continuously exposing
-the recess walls. The pressed label descends from its raised position at the same
-time as the value sinks and the next label rises. Previously recessed rows stay still.
+the recess walls. The pressed label travels a small distance while staying raised, then returns,
+while the value sinks and the next label rises. Previously revealed rows stay still.
+Native mobile tap highlighting is disabled, without removing keyboard focus outlines.
 
 ### Tweaking Chapter 1
 
@@ -98,12 +103,23 @@ Edit `src/app/blueprint-water/chapter.constants.ts`:
 - `CHAPTER_TEXT`, `CHAPTER_TRAITS`, `CHAPTER_LEVEL_LABELS`: chapter copy, row labels,
   and level wording. Level wording is shared with the original tower.
 - `CHAPTER_COLORS`: ground/text colors and retained trait color metadata.
-- `CHAPTER_TIMINGS`: `pressMs` (240) for simultaneous rise/press motion and
+- `CHAPTER_CLOSING_TEXTS`: ten possible closing phrases, selected once per chapter.
+- `CHAPTER_PATH_TEXT`: closing phrase font size, black color, spacing, surface offset,
+  distance below Social, clearance beyond the value column, and `bendRadius` (0.65)
+  for a continuous rounded 90-degree turn. When the rising text reaches the Name row
+  (`nameTurnOffset` shifts that height), it takes a second rounded turn to the right.
+  Glyph outlines follow the whole curve,
+  rather than switching abruptly between horizontal and vertical. Camera framing reserves
+  room for every possible phrase before the first reveal.
+- `CHAPTER_APPEARANCE.fadeMs` (650): opacity fade for the closing phrase and **Begin life**;
+  shortened to 120ms with reduced motion.
+- `CHAPTER_TIMINGS`: `pressMs` (640) for simultaneous rise/press motion and
   `settleMs` (40) before accepting the next press. All values are milliseconds.
   Both the 3D scene and 2D preview use cubic ease-out for quick keyboard-like travel
   that slows smoothly into its final position.
 - `CHAPTER_SCENE`: `fontSize` (0.62, Three.js world units; also scales 2D preview
-  text), `recessDepth` (0.24), `raisedHeight` (0.24), `labelHitPadding` (0.12),
+  text), `recessDepth` (0.24), `raisedHeight` (0.24), `keyTravel` (0.045),
+  `labelHitPadding` (0.12),
   row spacing, column positions and `framingPadding` (0.1).
   Both camera projections cap the configured zoom to fit the complete five-row layout,
   including every possible name and trait value, on load and resize. Framing is

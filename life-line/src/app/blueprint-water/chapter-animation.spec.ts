@@ -1,6 +1,7 @@
 import {
   chapterRevealDuration,
   chapterRevealPose,
+  chapterFadeOpacity,
   resolveChapterTimings,
 } from './chapter-animation';
 import { CHAPTER_SCENE, CHAPTER_TIMINGS, CHAPTER_REDUCED_MOTION_MS } from './chapter.constants';
@@ -16,30 +17,43 @@ describe('Chapter raised-button animation', () => {
     expect(pose.completed).toBe(false);
   });
 
-  it('continuously raises the next button while recessing the current label and value', () => {
+  it('raises the next button while the current label returns and its value recesses', () => {
     const poses = [0, 0.1, 0.25, 0.5, 0.75, 0.9, 1].map((fraction) =>
       chapterRevealPose(timings.pressMs * fraction, timings),
     );
     expect(poses[3].raisedZ).toBeCloseTo(CHAPTER_SCENE.raisedHeight * 0.875);
-    expect(poses[3].labelZ).toBeCloseTo(
-      CHAPTER_SCENE.raisedHeight - (CHAPTER_SCENE.raisedHeight + CHAPTER_SCENE.recessDepth) * 0.875,
-    );
+    expect(poses[3].labelZ).toBeCloseTo(CHAPTER_SCENE.raisedHeight - CHAPTER_SCENE.keyTravel);
     expect(poses[3].valueZ).toBeCloseTo(-CHAPTER_SCENE.recessDepth * 0.875);
     for (let i = 1; i < poses.length; i++) {
       expect(poses[i].raisedZ).toBeGreaterThan(poses[i - 1].raisedZ);
-      expect(poses[i].labelZ).toBeLessThan(poses[i - 1].labelZ);
       expect(poses[i].valueZ).toBeLessThan(poses[i - 1].valueZ);
     }
+    expect(poses[2].labelZ).toBeLessThan(poses[1].labelZ);
+    expect(poses[4].labelZ).toBeGreaterThan(poses[3].labelZ);
+    expect(
+      poses.every((pose) => pose.labelZ >= CHAPTER_SCENE.raisedHeight - CHAPTER_SCENE.keyTravel),
+    ).toBe(true);
+    expect(poses.every((pose) => pose.labelZ > 0)).toBe(true);
     const end = chapterRevealPose(chapterRevealDuration(timings), timings);
     expect(end.raisedZ).toBeCloseTo(CHAPTER_SCENE.raisedHeight);
-    expect(end.labelZ).toBeCloseTo(-CHAPTER_SCENE.recessDepth);
+    expect(end.labelZ).toBeCloseTo(CHAPTER_SCENE.raisedHeight);
     expect(end.valueZ).toBeCloseTo(-CHAPTER_SCENE.recessDepth);
     expect(end.completed).toBe(true);
     expect(poses.at(-1)?.completed).toBe(false);
     expect(chapterRevealPose(100000, timings)).toEqual(end);
   });
 
+  it('fades from transparent to opaque without overshooting or reversing', () => {
+    const values = [-100, 0, 100, 325, 550, 650, 1000].map((ms) => chapterFadeOpacity(ms, 650));
+    expect(values).toEqual([0, 0, expect.any(Number), 0.5, expect.any(Number), 1, 1]);
+    for (let i = 1; i < values.length; i++) {
+      expect(values[i]).toBeGreaterThanOrEqual(values[i - 1]);
+    }
+    expect(chapterFadeOpacity(0, 0)).toBe(1);
+  });
+
   it('uses a quick key travel with a soft stop and a short settling pause', () => {
+    const timings = resolveChapterTimings({ pressMs: 240, settleMs: 40 });
     expect(chapterRevealDuration(timings)).toBe(280);
     const positions = [0, 0.25, 0.5, 0.75, 1].map(
       (fraction) => chapterRevealPose(timings.pressMs * fraction, timings).raisedZ,
@@ -60,7 +74,7 @@ describe('Chapter raised-button animation', () => {
     const instant = resolveChapterTimings({ pressMs: 0, settleMs: 0 });
     expect(chapterRevealPose(0, instant)).toEqual({
       raisedZ: CHAPTER_SCENE.raisedHeight,
-      labelZ: -CHAPTER_SCENE.recessDepth,
+      labelZ: CHAPTER_SCENE.raisedHeight,
       valueZ: -CHAPTER_SCENE.recessDepth,
       completed: true,
     });

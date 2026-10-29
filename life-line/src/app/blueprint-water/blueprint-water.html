@@ -2,6 +2,8 @@
   <section
     class="chapter"
     [style.--press-duration]="animationTimings().pressMs + 'ms'"
+    [style.--appearance-duration]="appearanceMs() + 'ms'"
+    [style.--pressed-label-y]="pressedLabelY + 'px'"
     [style.--surface]="colors.surface"
     [style.--dry-text]="colors.dryText"
     [style.--font-scale]="fontScale"
@@ -22,7 +24,7 @@
             <div class="preview__row">
               <span
                 class="preview__label preview__recess"
-                [class.preview__raised]="row.raised"
+                [class.preview__raised]="row.raised || !!row.value"
                 [class.preview__label--pressing]="pressingRow(index)"
                 [attr.data-pressable]="row.raised"
               >
@@ -34,6 +36,22 @@
                 >{{ row.value }}</span
               >
             </div>
+          }
+          @if (snapshot().closingText) {
+            <svg class="preview__closing" viewBox="0 0 1000 600" aria-hidden="true">
+              <defs>
+                <path id="chapter-closing-path" [attr.d]="closingPath" />
+              </defs>
+              <text>
+                <textPath
+                  href="#chapter-closing-path"
+                  textLength="1150"
+                  lengthAdjust="spacingAndGlyphs"
+                >
+                  {{ snapshot().closingText }}
+                </textPath>
+              </text>
+            </svg>
           }
         </div>
       }
@@ -49,7 +67,9 @@
         <p role="alert">{{ navigationError() }}</p>
       }
     </footer>
-    <p class="sr-only" role="status" aria-live="polite">{{ announcement() }}</p>
+    <p class="sr-only" role="status" aria-live="polite">
+      {{ announcement() }} {{ snapshot().closingText }}
+    </p>
     @if (notice()) {
       <p class="sr-only" role="status">{{ notice() }}</p>
     }
