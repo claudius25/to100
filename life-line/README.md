@@ -93,18 +93,18 @@ Edit `src/app/blueprint-water/chapter.constants.ts`:
   both directional lights' XYZ positions and enabled flags. The surface lies in the XY plane; +Z
   points out of the ground.
 - `CHAPTER_DEBUG` (default `false`): whether the camera/light panel, FPS overlay/sampling
-  and expandable state JSON start open in a development build. They remain absent in
-  production.
+  and expandable state JSON start open.
 - `CHAPTER_DEV_BUTTON` (default `true`): shows a **DEV** button at the top centre in
-  development builds that shows or hides those tools at runtime (turning them off also
-  stops FPS sampling and mouse camera controls).
+  development and production builds that shows or hides those tools at runtime (turning
+  them off also stops FPS sampling and mouse camera controls). Set to `false` to hide it.
 - `CHAPTER_STATS` (requires `CHAPTER_DEBUG`): the FPS overlay in the top-left corner. `visible` (shown on
   load; toggle with "Show FPS stats"), `sampleMs` (refresh/averaging window) and
   `slowFrameMs` (frames slower than this count as slow). The overlay shows FPS, average
   and worst frame time, CPU time per frame, idle/moving activity and pixel ratio, canvas
   size, whether the GI pass ran, and draw calls/triangles per frame.
 - `CHAPTER_QUALITY`: lightweight rendering defaults: `curveSegments` (12),
-  `maxPixelRatio` (1) and `shadowMapSize` (2048). Renderer antialiasing is enabled;
+  `maxPixelRatio` (1.5) and `shadowMapSize` (2048). The higher pixel-ratio cap improves
+  sharpness on high-density mobile displays at additional GPU cost. Renderer antialiasing is enabled;
   multisampled post-processing and supersampling are disabled; resolution does not increase when
   idle. `giAoIntensity` defaults to 0 so the idle scene keeps the same render path as
   the animation. Raise it in the dev controls to enable AO only while idle. Text and

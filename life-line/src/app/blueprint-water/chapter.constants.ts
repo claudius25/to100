@@ -333,15 +333,15 @@ export const CHAPTER_QUALITY = {
   giOnlyWhenIdle: true,
   // How long the scene must be still before enabling the optional GI pass.
   idleDelayMs: 250,
-  // Cap rendering at one pixel per CSS pixel, including high-density displays.
-  maxPixelRatio: 1,
+  // Limit supersampling on high-density screens to balance sharpness and performance.
+  maxPixelRatio: 1.5,
   shadowMapSize: 2048,
 } as const;
 
-/** Whether camera controls, FPS sampling and the state JSON start open (dev builds only). */
+/** Whether camera controls, FPS sampling and the state JSON start open. */
 export const CHAPTER_DEBUG = false;
 
-/** Show the top DEV button that toggles the dev tools at runtime (dev builds only). */
+/** Show the top DEV button that toggles the dev tools at runtime. */
 export const CHAPTER_DEV_BUTTON = true;
 
 /** Dev-only frame statistics overlay. */

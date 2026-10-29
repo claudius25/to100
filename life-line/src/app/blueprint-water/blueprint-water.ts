@@ -8,7 +8,6 @@ import {
   ElementRef,
   inject,
   input,
-  isDevMode,
   NgZone,
   output,
   PLATFORM_ID,
@@ -68,8 +67,8 @@ export class BlueprintWater {
   protected readonly colors = CHAPTER_COLORS;
   protected readonly liquid = CHAPTER_LIQUID;
   protected readonly fontScale = CHAPTER_SCENE.fontSize / 0.62;
-  protected readonly devButton = isDevMode() && CHAPTER_DEV_BUTTON;
-  protected readonly debugEnabled = signal<boolean>(isDevMode() && CHAPTER_DEBUG);
+  protected readonly devButton = CHAPTER_DEV_BUTTON;
+  protected readonly debugEnabled = signal<boolean>(CHAPTER_DEBUG);
   protected readonly mouseCamera = signal(false);
   protected readonly showStats = signal<boolean>(CHAPTER_STATS.visible);
   protected readonly frameStats = signal<ReliefFrameStats | null>(null);
