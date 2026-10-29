@@ -40,12 +40,12 @@
           @if (snapshot().closingText) {
             <svg class="preview__closing" viewBox="0 0 1000 600" aria-hidden="true">
               <defs>
-                <path id="chapter-closing-path" [attr.d]="closingPath" />
+                <path id="chapter-closing-path" [attr.d]="closingLayout.path" />
               </defs>
               <text>
                 <textPath
                   href="#chapter-closing-path"
-                  textLength="1150"
+                  [attr.textLength]="closingLayout.length"
                   lengthAdjust="spacingAndGlyphs"
                 >
                   {{ snapshot().closingText }}
@@ -75,14 +75,25 @@
     }
   </section>
   @if (devButton) {
-    <button
-      type="button"
-      class="dev-toggle"
-      [attr.aria-pressed]="debugEnabled()"
-      (click)="toggleDevTools()"
-    >
-      DEV
-    </button>
+    @if (!devButtonVisible()) {
+      <button
+        type="button"
+        class="dev-unlock"
+        aria-label="Reveal developer button with three taps"
+        [style.width.px]="devCornerSize"
+        [style.height.px]="devCornerSize"
+        (click)="unlockDevTools()"
+      ></button>
+    } @else {
+      <button
+        type="button"
+        class="dev-toggle"
+        [attr.aria-pressed]="debugEnabled()"
+        (click)="toggleDevTools()"
+      >
+        DEV
+      </button>
+    }
   }
   @if (debugEnabled()) {
     @if (frameStats(); as stats) {

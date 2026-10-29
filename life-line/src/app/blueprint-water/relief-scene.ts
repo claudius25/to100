@@ -93,6 +93,29 @@ export function chapterPathPoint(
   return new Vector2(bendX + topRadius + along - rise - topArcLength, topY + offset);
 }
 
+/** Maximum arc length before the caption would extend past its bounded final run. */
+export function chapterPathCapacity(
+  startX: number,
+  baseline: number,
+  bendX: number,
+  topY: number,
+): number {
+  const radius = Math.min(CHAPTER_PATH_TEXT.bendRadius, (bendX - startX) / 2);
+  const topRadius = Math.max(0, Math.min(CHAPTER_PATH_TEXT.bendRadius, topY - baseline - radius));
+  return (
+    bendX -
+    startX -
+    radius +
+    (Math.PI * radius) / 2 +
+    topY -
+    baseline -
+    radius -
+    topRadius +
+    (Math.PI * topRadius) / 2 +
+    CHAPTER_PATH_TEXT.finalRun
+  );
+}
+
 interface TextMotion {
   mesh: Mesh<ExtrudeGeometry, MeshStandardMaterial>;
   kind: 'raise' | 'label' | 'value';
@@ -455,31 +478,44 @@ export class ReliefScene implements ChapterVisual {
     const y = CHAPTER_SCENE.rowTop - CHAPTER_TRAITS.length * CHAPTER_SCENE.rowGap;
     const label = new ShapeGeometry(this.glyphs(CHAPTER_TRAITS.at(-1)!.label, y, true));
     label.computeBoundingBox();
-    const startX = label.boundingBox!.min.x;
+    const startX = label.boundingBox!.min.x - CHAPTER_PATH_TEXT.startLeft;
     const bendX = this.pathRightEdge + CHAPTER_PATH_TEXT.valueClearance + CHAPTER_PATH_TEXT.gap;
     label.dispose();
     const baseline = y - CHAPTER_PATH_TEXT.belowSocial - CHAPTER_PATH_TEXT.gap;
     // Turn right again once the rising text reaches the Name row.
     const topY = CHAPTER_SCENE.rowTop + CHAPTER_PATH_TEXT.nameTurnOffset + CHAPTER_PATH_TEXT.gap;
+    const characters = [...text].map((character) => ({
+      character,
+      advance:
+        ((this.font!.data.glyphs[character] ?? this.font!.data.glyphs['?']).ha /
+          this.font!.data.resolution) *
+          CHAPTER_PATH_TEXT.fontSize +
+        CHAPTER_PATH_TEXT.letterSpacing,
+    }));
+    const naturalLength = characters.reduce((length, glyph) => length + glyph.advance, 0);
+    const scale = Math.min(1, chapterPathCapacity(startX, baseline, bendX, topY) / naturalLength);
     let distance = 0;
     const outlines: Shape[] = [];
-    for (const character of text) {
-      const glyph = this.font!.data.glyphs[character] ?? this.font!.data.glyphs['?'];
-      const advance =
-        (glyph.ha / this.font!.data.resolution) * CHAPTER_PATH_TEXT.fontSize +
-        CHAPTER_PATH_TEXT.letterSpacing;
+    for (const { character, advance } of characters) {
       const transform = (path: Path) =>
         path
           .getPoints(CHAPTER_QUALITY.curveSegments)
           .map((point) =>
-            chapterPathPoint(distance + point.x, point.y, startX, baseline, bendX, topY),
+            chapterPathPoint(
+              distance + point.x * scale,
+              point.y * scale,
+              startX,
+              baseline,
+              bendX,
+              topY,
+            ),
           );
       for (const shape of this.font!.generateShapes(character, CHAPTER_PATH_TEXT.fontSize)) {
         const outline = new Shape(transform(shape));
         outline.holes = shape.holes.map((hole) => new Path(transform(hole)));
         outlines.push(outline);
       }
-      distance += advance;
+      distance += advance * scale;
     }
     return outlines;
   }

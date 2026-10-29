@@ -6,6 +6,7 @@ import { BlueprintWater } from './blueprint-water';
 import type { GameState } from '../simulation/model/types';
 import {
   CHAPTER_TEXT,
+  CHAPTER_DEV_UNLOCK,
   CHAPTER_TRAITS,
   CHAPTER_VIEW,
   CHAPTER_VIEW_SLIDERS,
@@ -33,6 +34,9 @@ async function createChapter(timings: Partial<ChapterTimings> = {}, debug = fals
   });
   await fixture.whenStable();
   if (debug) {
+    const unlock = fixture.nativeElement.querySelector('.dev-unlock') as HTMLButtonElement;
+    for (let tap = 0; tap < CHAPTER_DEV_UNLOCK.taps; tap++) unlock.click();
+    await fixture.whenStable();
     fixture.nativeElement.querySelector('.dev-toggle').click();
     await fixture.whenStable();
   }
@@ -46,6 +50,47 @@ describe('BlueprintWater', () => {
   afterEach(() => {
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
+  });
+
+  it('reveals DEV only after three corner taps, without advancing the chapter', async () => {
+    const fixture = await createChapter();
+    const root = fixture.nativeElement as HTMLElement;
+    const unlock = root.querySelector<HTMLButtonElement>('.dev-unlock')!;
+    expect(root.querySelector('.dev-toggle')).toBeNull();
+    unlock.click();
+    unlock.click();
+    await fixture.whenStable();
+    expect(root.querySelector('.dev-toggle')).toBeNull();
+    unlock.click();
+    await fixture.whenStable();
+    expect(root.querySelectorAll('.preview__row')).toHaveLength(0);
+    expect(root.querySelector('.dev-unlock')).toBeNull();
+    expect(root.querySelector('.scene-controls')).toBeNull();
+    const dev = root.querySelector<HTMLButtonElement>('.dev-toggle')!;
+    dev.click();
+    await fixture.whenStable();
+    expect(root.querySelector('.scene-controls')).not.toBeNull();
+    dev.click();
+    await fixture.whenStable();
+    expect(root.querySelector('.scene-controls')).toBeNull();
+    expect(root.querySelector('.dev-toggle')).not.toBeNull();
+  });
+
+  it('does not count old taps toward unlocking DEV', async () => {
+    const fixture = await createChapter();
+    const root = fixture.nativeElement as HTMLElement;
+    const unlock = root.querySelector<HTMLButtonElement>('.dev-unlock')!;
+    const now = vi.spyOn(performance, 'now').mockReturnValue(0);
+    unlock.click();
+    unlock.click();
+    now.mockReturnValue(CHAPTER_DEV_UNLOCK.tapWindowMs + 1);
+    unlock.click();
+    await fixture.whenStable();
+    expect(root.querySelector('.dev-toggle')).toBeNull();
+    unlock.click();
+    unlock.click();
+    await fixture.whenStable();
+    expect(root.querySelector('.dev-toggle')).not.toBeNull();
   });
 
   it('requires pressing the raised label and recesses its value while the next label rises', async () => {

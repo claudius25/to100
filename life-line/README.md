@@ -87,7 +87,8 @@ taps. Start over cancels pending work and clears the surface. A live region anno
 the results.
 The chapter UI contains the tappable scene, an initial **Play** launcher,
 the optional **DEV** button and, after completion, the bottom-right **Begin life** button, all
-overlaid on the scene. Tap instructions and row announcements remain available to
+overlaid on the scene. The launcher **Play** button sits slightly below centre (58% height).
+Tap instructions and row announcements remain available to
 screen readers. Navigation failures are still shown as alerts.
 
 New values begin flush with the surface and ease downward, continuously exposing
@@ -110,6 +111,9 @@ Edit `src/app/blueprint-water/chapter.constants.ts`:
   distance below Social, clearance beyond the value column, and `bendRadius` (0.65)
   for a continuous rounded 90-degree turn. When the rising text reaches the Name row
   (`nameTurnOffset` shifts that height), it takes a second rounded turn to the right.
+  `startLeft` (1.5) moves the starting point left of Social; `finalRun` (2) limits the
+  straight after the second bend. `fontSize` is a maximum: longer phrases scale down
+  to fit this bounded path instead of forcing the camera out and shrinking the buttons.
   Glyph outlines follow the whole curve,
   rather than switching abruptly between horizontal and vertical. Camera framing reserves
   room for every possible phrase before the first reveal.
@@ -132,9 +136,13 @@ Edit `src/app/blueprint-water/chapter.constants.ts`:
   points out of the ground.
 - `CHAPTER_DEBUG` (default `false`): whether the camera/light panel, FPS overlay/sampling
   and expandable state JSON start open.
-- `CHAPTER_DEV_BUTTON` (default `true`): shows a **DEV** button at the top centre in
-  development and production builds that shows or hides those tools at runtime (turning
-  them off also stops FPS sampling and mouse camera controls). Set to `false` to hide it.
+- `CHAPTER_DEV_BUTTON` (default `true`): allows revealing a **DEV** button at the top
+  centre in development and production builds. Tap the invisible top-left corner three
+  times within 1.2 seconds to reveal it, then press **DEV** to toggle the tools. These
+  corner taps do not advance the chapter. `CHAPTER_DEV_UNLOCK` configures the tap count,
+  time window and corner size (64 CSS pixels). `CHAPTER_DEBUG` also reveals the button
+  immediately when enabled. Turning tools off stops FPS sampling and mouse camera
+  controls. Set `CHAPTER_DEV_BUTTON` to `false` to disable the reveal gesture and button.
 - `CHAPTER_STATS` (requires visible dev tools): the FPS overlay in the top-left corner. `visible` (shown on
   load; toggle with "Show FPS stats"), `sampleMs` (refresh/averaging window) and
   `slowFrameMs` (frames slower than this count as slow). The overlay shows FPS, average

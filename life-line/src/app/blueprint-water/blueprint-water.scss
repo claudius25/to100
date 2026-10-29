@@ -199,6 +199,20 @@ button:disabled {
   overflow: auto;
   font-size: 0.8rem;
 }
+.dev-unlock {
+  position: fixed;
+  z-index: 4;
+  top: 0;
+  left: 0;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  touch-action: manipulation;
+}
+.dev-unlock:focus-visible {
+  outline: 2px solid #526d89;
+  outline-offset: -4px;
+}
 .dev-toggle {
   position: fixed;
   z-index: 4;

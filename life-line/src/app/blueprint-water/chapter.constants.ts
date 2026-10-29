@@ -189,6 +189,9 @@ export const CHAPTER_CLOSING_TEXTS = [
 
 export const CHAPTER_PATH_TEXT = {
   fontSize: 0.52,
+  startLeft: 1.5,
+  // Limit the final run; long phrases scale down instead of widening the camera fit.
+  finalRun: 2,
   color: '#B8B8B8',
   // Extra world-space clearance around the rows, in addition to the offsets below.
   gap: 0.6,
@@ -358,8 +361,14 @@ export const CHAPTER_QUALITY = {
 /** Whether camera controls, FPS sampling and the state JSON start open. */
 export const CHAPTER_DEBUG = false;
 
-/** Show the top DEV button that toggles the dev tools at runtime. */
+/** Allow revealing the DEV button with the top-left triple-tap gesture. */
 export const CHAPTER_DEV_BUTTON = true;
+
+export const CHAPTER_DEV_UNLOCK = {
+  taps: 3,
+  tapWindowMs: 1200,
+  cornerSize: 64,
+} as const;
 
 /** Dev-only frame statistics overlay. */
 export const CHAPTER_STATS = {

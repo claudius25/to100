@@ -1,11 +1,23 @@
 import { Vector3 } from 'three';
 import { CHAPTER_PATH_TEXT, CHAPTER_TIMINGS, CHAPTER_VIEW } from './chapter.constants';
-import { chapterPathPoint, ReliefScene } from './relief-scene';
+import { chapterPathCapacity, chapterPathPoint, ReliefScene } from './relief-scene';
 
 describe('Closing caption path', () => {
   const radius = CHAPTER_PATH_TEXT.bendRadius;
   const straight = 10 - radius;
   const arcEnd = straight + (Math.PI * radius) / 2;
+
+  it('bounds the caption at the end of the final run, including both rounded turns', () => {
+    const startX = -2;
+    const baseline = -3;
+    const bendX = 8;
+    const topY = 3;
+    const capacity = chapterPathCapacity(startX, baseline, bendX, topY);
+    const end = chapterPathPoint(capacity, 0, startX, baseline, bendX, topY);
+    expect(end.x).toBeCloseTo(bendX + radius + CHAPTER_PATH_TEXT.finalRun);
+    expect(end.y).toBeCloseTo(topY);
+    expect(chapterPathCapacity(startX - 1, baseline, bendX, topY)).toBeCloseTo(capacity + 1);
+  });
 
   it('follows a single continuous baseline with matching tangents at both joins', () => {
     const point = (distance: number) => chapterPathPoint(distance, 0, 0, 0, 10);

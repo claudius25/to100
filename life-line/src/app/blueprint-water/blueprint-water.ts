@@ -31,6 +31,7 @@ import {
   CHAPTER_REDUCED_MOTION_MS,
   CHAPTER_DEBUG,
   CHAPTER_DEV_BUTTON,
+  CHAPTER_DEV_UNLOCK,
   CHAPTER_SCENE,
   CHAPTER_STATS,
   CHAPTER_TEXT,
@@ -64,19 +65,30 @@ export class BlueprintWater {
   private pendingDone: (() => void) | null = null;
   private disposed = false;
   private readonly reducedMotion = signal(false);
+  private devTapCount = 0;
+  private devTapStartedAt = -Infinity;
 
   protected readonly text = CHAPTER_TEXT;
   protected readonly colors = CHAPTER_COLORS;
   protected readonly fontScale = CHAPTER_SCENE.fontSize / 0.62;
   protected readonly pressedLabelY =
     -4 * (1 - Math.min(CHAPTER_SCENE.keyTravel / CHAPTER_SCENE.raisedHeight, 1));
-  protected readonly closingPath = (() => {
+  protected readonly closingLayout = (() => {
     const radius = CHAPTER_PATH_TEXT.bendRadius * 100;
-    const nameY = 60;
-    return (
-      `M 75 555 H ${930 - radius} A ${radius} ${radius} 0 0 0 930 ${555 - radius} ` +
-      `V ${nameY + radius} A ${radius} ${radius} 0 0 1 ${930 + radius} ${nameY} H 1000`
-    );
+    const gap = CHAPTER_PATH_TEXT.gap * 20;
+    const startX = Math.max(10, 75 - CHAPTER_PATH_TEXT.startLeft * 40);
+    const bendX = 850 + gap;
+    const baseline = 555 + gap;
+    const nameY = 60 - gap;
+    const finalRun = CHAPTER_PATH_TEXT.finalRun * 20;
+    return {
+      path:
+        `M ${startX} ${baseline} H ${bendX - radius} ` +
+        `A ${radius} ${radius} 0 0 0 ${bendX} ${baseline - radius} ` +
+        `V ${nameY + radius} A ${radius} ${radius} 0 0 1 ${bendX + radius} ${nameY} ` +
+        `H ${bendX + radius + finalRun}`,
+      length: bendX - startX + baseline - nameY + (Math.PI - 4) * radius + finalRun,
+    };
   })();
   protected readonly appearanceMs = computed(() =>
     this.reducedMotion()
@@ -84,6 +96,8 @@ export class BlueprintWater {
       : CHAPTER_APPEARANCE.fadeMs,
   );
   protected readonly devButton = CHAPTER_DEV_BUTTON;
+  protected readonly devButtonVisible = signal<boolean>(CHAPTER_DEBUG);
+  protected readonly devCornerSize = CHAPTER_DEV_UNLOCK.cornerSize;
   protected readonly debugEnabled = signal<boolean>(CHAPTER_DEBUG);
   protected readonly mouseCamera = signal(false);
   protected readonly showStats = signal<boolean>(CHAPTER_STATS.visible);
@@ -200,6 +214,17 @@ export class BlueprintWater {
   protected toggleLight(key: LightToggle): void {
     if (this.debugEnabled()) {
       this.applyView({ ...this.viewSettings(), [key]: !this.viewSettings()[key] });
+    }
+  }
+
+  protected unlockDevTools(): void {
+    const now = performance.now();
+    if (now - this.devTapStartedAt > CHAPTER_DEV_UNLOCK.tapWindowMs) {
+      this.devTapCount = 0;
+      this.devTapStartedAt = now;
+    }
+    if (++this.devTapCount >= CHAPTER_DEV_UNLOCK.taps) {
+      this.devButtonVisible.set(true);
     }
   }
 
