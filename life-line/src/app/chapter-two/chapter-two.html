@@ -1,4 +1,6 @@
 <main class="chapter">
+  <div class="stage" #stage></div>
+
   <app-status-bar
     class="status"
     [health]="health"
@@ -8,16 +10,100 @@
     [width]="statusBar.width"
     [height]="statusBar.height"
   />
+
   <section class="intro">
     <p class="eyebrow">Chapter 2</p>
     <h1>{{ name }}</h1>
+    <p class="hint" role="status" aria-live="polite">{{ hint() }}</p>
   </section>
-  <footer class="footer">
-    @if (navigationError()) {
-      <p role="alert">{{ navigationError() }}</p>
-    }
-    <button class="continue" type="button" [disabled]="navigating()" (click)="continueToGame()">
-      Continue
+
+  @if (!sceneUnavailable()) {
+    <button class="room-view" type="button" [disabled]="loading()" (click)="roomView()">
+      Room view
     </button>
+  }
+
+  @if (tooltip(); as tip) {
+    <div
+      class="tooltip"
+      role="dialog"
+      aria-label="Object actions"
+      [style.left.px]="tip.x"
+      [style.top.px]="tip.y"
+    >
+      <strong class="tooltip-title">{{ tip.title }}</strong>
+      <button
+        class="tooltip-dismiss"
+        type="button"
+        aria-label="Close actions"
+        (click)="dismissTooltip()"
+      >
+        ×
+      </button>
+      @if (tip.actions.length > 0) {
+        <div class="tooltip-actions">
+          @for (action of tip.actions; track action.id) {
+            <button type="button" (click)="runAction(tip.owner, action.id)">
+              {{ action.label }}
+            </button>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  @if (!sceneUnavailable()) {
+    <section class="inventory" aria-label="Inventory">
+      <p class="inventory-label">Inventory</p>
+      @if (useLabel()) {
+        <strong class="use-label">{{ useLabel() }}</strong>
+      }
+      @if (inventory().empty) {
+        <p class="inventory-empty">Nothing collected yet</p>
+      }
+      <div class="inventory-row">
+        @for (group of inventory().batteries; track group.source) {
+          <button
+            type="button"
+            class="inventory-item"
+            [class.selected]="batteriesSelected(group.source)"
+            [attr.aria-pressed]="batteriesSelected(group.source)"
+            (click)="selectBatteries(group.source)"
+          >
+            {{ group.label }} × {{ group.count }}
+          </button>
+        }
+        @if (inventory().screwdriver) {
+          <button
+            type="button"
+            class="inventory-item screwdriver"
+            [class.selected]="screwdriverSelected()"
+            [attr.aria-pressed]="screwdriverSelected()"
+            (click)="selectScrewdriver()"
+          >
+            <svg viewBox="0 0 60 40" aria-hidden="true">
+              <path d="M13 30L41 12" stroke="#9ca6a5" stroke-width="5" />
+              <path d="M40 13l9-6 3 4-10 5" fill="#9ca6a5" />
+              <path d="M7 33l13-9" stroke="#b97d67" stroke-width="12" stroke-linecap="round" />
+            </svg>
+            <span>Screwdriver</span>
+          </button>
+        }
+      </div>
+    </section>
+  }
+
+  <footer class="footer">
+    @if (sceneNotice()) {
+      <p class="notice" role="alert">{{ sceneNotice() }}</p>
+    }
+    @if (navigationError()) {
+      <p class="notice" role="alert">{{ navigationError() }}</p>
+    }
+    @if (canContinue()) {
+      <button class="continue" type="button" [disabled]="navigating()" (click)="continueToGame()">
+        Continue
+      </button>
+    }
   </footer>
 </main>

@@ -1,7 +1,7 @@
 :host {
   display: block;
   height: 100%;
-  color: #363735;
+  color: #414e3e;
   font-family: 'Segoe UI', sans-serif;
   -webkit-tap-highlight-color: transparent;
 }
@@ -9,7 +9,20 @@
 .chapter {
   position: relative;
   height: 100%;
-  background: #eeede9;
+  overflow: hidden;
+  background: #eeeade;
+}
+
+.stage {
+  position: absolute;
+  inset: 0;
+
+  ::ng-deep canvas.nursery-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+  }
 }
 
 .status {
@@ -20,45 +33,206 @@
 
 .intro {
   position: absolute;
-  inset: 0;
-  display: grid;
-  place-content: center;
-  text-align: center;
+  top: max(44px, calc(env(safe-area-inset-top) + 32px));
+  left: max(12px, env(safe-area-inset-left));
+  max-width: 60%;
   pointer-events: none;
 }
 
 .eyebrow {
-  margin: 0 0 0.4rem;
+  margin: 0 0 0.2rem;
   color: #6f716b;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
 }
 
 h1 {
   margin: 0;
-  font-size: clamp(1.6rem, 6vh, 2.6rem);
-  font-weight: 500;
-  letter-spacing: 0.08em;
+  font:
+    500 clamp(1.1rem, 4vh, 1.6rem) Georgia,
+    serif;
+  letter-spacing: 0.06em;
 }
 
-.footer {
-  position: absolute;
-  right: max(16px, env(safe-area-inset-right));
-  bottom: max(16px, env(safe-area-inset-bottom));
+.hint {
+  margin: 0.3rem 0 0;
+  font-size: 0.78rem;
+  opacity: 0.8;
 }
 
-.continue {
-  border: 1px solid #565950;
-  border-radius: 2rem;
-  padding: 0.7rem 1.5rem;
-  background: #eeede9cc;
+button {
+  border: 1px solid #a6b098;
+  border-radius: 10px;
+  background: #faf7ee;
   color: inherit;
   font: inherit;
   cursor: pointer;
 }
 
-.continue:disabled {
-  opacity: 0.6;
+button:disabled {
+  opacity: 0.5;
   cursor: default;
+}
+
+.room-view {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+  min-height: 40px;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.8rem;
+}
+
+.tooltip {
+  position: absolute;
+  z-index: 4;
+  width: 150px;
+  padding: 9px;
+  border: 1px solid #d0d5c5;
+  border-radius: 10px;
+  background: #fffaf1;
+  box-shadow: 0 8px 30px #39443425;
+  transform: translate(-50%, -100%);
+  transform-origin: bottom center;
+}
+
+.tooltip::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: calc(50% - 8px);
+  border-top: 8px solid #fffaf1;
+  border-right: 8px solid transparent;
+  border-left: 8px solid transparent;
+}
+
+.tooltip-title {
+  display: block;
+  padding-right: 1.1rem;
+  font-size: 0.78rem;
+}
+
+.tooltip-dismiss {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  min-height: 26px;
+  padding: 0 6px;
+  border: 0;
+  background: transparent;
+}
+
+.tooltip-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+
+  button {
+    flex: 1;
+    min-height: 40px;
+    padding: 0.35rem 0;
+    font-size: 0.68rem;
+    font-weight: 650;
+    letter-spacing: 1px;
+  }
+}
+
+.inventory {
+  position: absolute;
+  bottom: max(10px, env(safe-area-inset-bottom));
+  left: 50%;
+  z-index: 3;
+  max-width: min(94%, 520px);
+  padding: 7px 14px;
+  border: 1px solid #d1d6c6;
+  border-radius: 14px;
+  background: #faf7eef2;
+  box-shadow: 0 5px 20px #39443410;
+  text-align: center;
+  transform: translateX(-50%);
+}
+
+.inventory-label {
+  margin: 0 0 5px;
+  font-size: 0.6rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.use-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.inventory-empty {
+  margin: 0;
+  font-size: 0.72rem;
+  opacity: 0.55;
+}
+
+.inventory-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  overflow-x: auto;
+}
+
+.inventory-item {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 8px;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.inventory-item.selected {
+  border-color: #67785f;
+  background: #e2e7d9;
+  font-weight: 700;
+}
+
+.inventory-item svg {
+  width: 34px;
+  height: 26px;
+  transition:
+    width 0.2s,
+    height 0.2s;
+}
+
+.inventory-item.selected svg {
+  width: 56px;
+  height: 42px;
+}
+
+.footer {
+  position: absolute;
+  right: max(12px, env(safe-area-inset-right));
+  bottom: max(10px, env(safe-area-inset-bottom));
+  z-index: 3;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.notice {
+  margin: 0;
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  background: #fff1e5;
+  color: #663a24;
+  font-size: 0.75rem;
+}
+
+.continue {
+  min-height: 44px;
+  border-radius: 2rem;
+  padding: 0.6rem 1.4rem;
 }

@@ -238,7 +238,8 @@ without losing its position. Reset restores both enabled flags as well.
 **Begin life** opens `/chapter-2` (`src/app/chapter-two/`), which shows the hero's
 `StatusBarComponent` in the top-left corner, with dimensions configured by
 `CHAPTER_TWO_STATUS_BAR`. Mood maps to the face: 0-24 very sad, 25-49 sad,
-50-74 neutral, 75-100 happy. **Continue** passes the completed chapter on to `/game`.
+50-74 neutral, 75-100 happy. **Continue** passes the completed chapter on to `/game`,
+but only appears once the nursery puzzle below is solved.
 The chapter name is checked case-insensitively, because Chapter 1 shows it in capitals. As explicitly selected,
 levels 1/2/3/4 map to 25/50/75/100, with health blueprint mapped to
 `physicalResilience`. The game engine records Chapter 1 in `Hero.chapters`.
@@ -261,6 +262,65 @@ in `public/blueprint-water/THREE-LICENSE.txt`; the renderer uses the existing np
 Three.js dependency rather than copying the archive's bundled library.
 
 Focused validation: `npm test -- --watch=false --include=src/app/chapter-one`.
+
+## Nursery puzzle / Chapter 2
+
+`/chapter-2` renders an interactive nursery with Three.js. The player must take the
+screwdriver from the desk drawer, use it to unscrew the clock's battery cover, collect
+both charged clock batteries, install them in the toy arm above the cot and press its
+red button. **Continue** stays hidden until the mobile actually starts; installing
+batteries, the teddy's PLAY test, the clock's WATCH view and a failed start never
+complete the chapter. Once earned it stays visible, even after the mobile is stopped.
+The teddy's own batteries are depleted and cannot drive the mobile.
+
+### The model
+
+`src/assets/nursery-room.glb` is loaded once as `assets/nursery-room.glb` (the
+`**/*.glb` asset glob in `angular.json` copies it). It contains geometry, named nodes
+and materials only — **no animation clips and no puzzle behaviour**. Every animation,
+rule and interaction below is implemented in TypeScript.
+
+Nothing is reparented, so authored transforms and nesting survive intact. Note that
+the asset repeats names (`Colon`, and the mobile's toy teddy reuses `Teddy_eye_*`);
+`GLTFLoader` makes them unique by appending `_1`, so all lookups are scoped to a
+subtree and match the authored base name.
+
+### Replacing a model
+
+All node lookup lives in `nursery/model-bindings.ts` and all measurements in
+`nursery/nursery.config.ts`. Object behaviour only ever sees semantic bindings — eyes,
+battery slots, cover pivot, interaction target, camera target — so a better nursery
+needs a new asset URL, new node names and new coordinates in those two files, not
+new puzzle logic. `createNurseryBindings()` validates every required node at load
+time and names the missing one in the error.
+
+### Where things live
+
+Under `src/app/chapter-two/nursery/`:
+
+- `bear.ts`, `bed.ts`, `desk.ts`, `clock.ts`, `room.ts`: the five replaceable objects.
+  Each exposes typed actions plus `update`/`reset`/`dispose`, receives its bindings and
+  a narrow event service through its constructor, and owns neither a renderer, a DOM
+  query nor an animation loop.
+- `puzzle-state.ts`: the only authority for items and completion. Four stable battery
+  IDs, each with a source (`teddy`/`clock`), a charge (`depleted`/`charged`) and exactly
+  one location (`source`/`inventory`/`mobile`). Counts are derived, so double-collection
+  and negative counts are impossible, and a swap returns the old pair unchanged.
+- `inventory.ts`: grouped counts, the single-selection rule and the `USE …` label.
+- `interaction.types.ts`: the interaction contract and hit priorities, so a battery,
+  cover or button always wins over the furniture holding it.
+- `camera-controller.ts`: the orthographic camera and orbit controls. One transition at
+  a time; a replaced transition is settled first so an object cannot be left half-turned.
+  Objects animate their own poses through the request's `onProgress` callback.
+- `nursery-world.ts`: routes one raycast hit to the owning object; holds no rules.
+- `chapter-2-scene.ts`: the renderer, the single animation loop, the one raycast per
+  tap, pointer/projection maths relative to the canvas container, and teardown.
+
+`chapter-two.ts` stays thin: scene lifecycle, tooltips, inventory selection and the
+**Continue** navigation. Missing WebGL2 or a failed load shows a notice and reveals
+**Continue** so the chapter cannot dead-end.
+
+Focused validation: `npm test -- --watch=false --include=src/app/chapter-two`.
 
 ## Starting blueprint
 

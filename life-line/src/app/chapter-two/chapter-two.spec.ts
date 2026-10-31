@@ -31,6 +31,34 @@ describe('ChapterTwoPage', () => {
     TestBed.configureTestingModule({ providers: [provideRouter(routes)] });
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it('hides Continue while the nursery puzzle is playable and unsolved', async () => {
+    // Pretend WebGL exists so the chapter takes its interactive path.
+    vi.stubGlobal('WebGL2RenderingContext', class {});
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({} as never);
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const harness = await RouterTestingHarness.create();
+    await TestBed.inject(Router).navigateByUrl('/chapter-2', {
+      state: { blueprintChapter: chapter },
+    });
+    harness.detectChanges();
+    const root = harness.routeNativeElement!;
+    expect(root.querySelector('.continue')).toBeNull();
+    expect(root.querySelector('.inventory')).not.toBeNull();
+
+    // The real renderer cannot start under jsdom, so the chapter must not dead-end.
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+    expect(root.querySelector('.continue')).not.toBeNull();
+    expect(root.querySelector('[role="alert"]')?.textContent?.trim()).toBe(
+      'The room could not load.',
+    );
+  });
+
   it('shows the configured hero status bar and passes the blueprint on to the game', async () => {
     const harness = await RouterTestingHarness.create();
     await TestBed.inject(Router).navigateByUrl('/chapter-2', {
