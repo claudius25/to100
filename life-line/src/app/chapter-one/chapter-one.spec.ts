@@ -2,7 +2,7 @@ import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { routes } from '../app.routes';
-import { BlueprintWater } from './blueprint-water';
+import { ChapterOnePage } from './chapter-one';
 import type { GameState } from '../simulation/model/types';
 import {
   CHAPTER_TEXT,
@@ -14,8 +14,9 @@ import {
   type ChapterTimings,
 } from './chapter.constants';
 import { ReliefScene } from './relief-scene';
+import { LIFE_SAVE_KEY } from '../life-save';
 
-async function waitReady(fixture: ComponentFixture<BlueprintWater>): Promise<void> {
+async function waitReady(fixture: ComponentFixture<ChapterOnePage>): Promise<void> {
   for (let i = 0; i < 100; i++) {
     await fixture.whenStable();
     if (!fixture.nativeElement.querySelector('.scene--busy')) return;
@@ -25,7 +26,7 @@ async function waitReady(fixture: ComponentFixture<BlueprintWater>): Promise<voi
 }
 
 async function createChapter(timings: Partial<ChapterTimings> = {}, debug = false) {
-  const fixture = TestBed.createComponent(BlueprintWater);
+  const fixture = TestBed.createComponent(ChapterOnePage);
   fixture.componentRef.setInput('random', () => 0);
   fixture.componentRef.setInput('timings', {
     pressMs: 5,
@@ -43,8 +44,9 @@ async function createChapter(timings: Partial<ChapterTimings> = {}, debug = fals
   return fixture;
 }
 
-describe('BlueprintWater', () => {
+describe('ChapterOnePage', () => {
   beforeEach(() => {
+    localStorage.removeItem(LIFE_SAVE_KEY);
     TestBed.configureTestingModule({ providers: [provideRouter(routes)] });
   });
   afterEach(() => {
@@ -227,6 +229,7 @@ describe('BlueprintWater', () => {
     root.querySelector<HTMLButtonElement>('.begin')!.click();
     await fixture.whenStable();
     expect(navigate).toHaveBeenCalledWith('/chapter-2', {
+      replaceUrl: true,
       state: {
         blueprintChapter: {
           name: MALE_NAMES[0].toUpperCase(),
@@ -259,7 +262,7 @@ describe('BlueprintWater', () => {
 
   it('navigates to the new route, hands the blueprint to GameEngine, and preserves it on reset', async () => {
     const harness = await RouterTestingHarness.create();
-    await harness.navigateByUrl('/blueprint-water');
+    await harness.navigateByUrl('/chapter-1');
     expect(harness.routeNativeElement?.querySelector('.scene')).not.toBeNull();
     expect(harness.routeNativeElement?.querySelector('header')).toBeNull();
     await TestBed.inject(Router).navigateByUrl('/game', {

@@ -1,4 +1,5 @@
 import { Hero } from './hero';
+import { readGameState } from './game-state';
 import { Step } from './step';
 import { StepFactory } from './step-factory';
 import { STEP_TEMPLATES } from './step-templates';
@@ -97,6 +98,43 @@ export class GameEngine {
       status: this.status,
       history: structuredClone(this.history),
     };
+  }
+
+  restoreState(value: unknown): GameState {
+    const state = readGameState(value);
+    const saved = state.hero;
+    const hero = new Hero(saved.id, saved.name);
+    hero.ageWeeks = saved.ageWeeks;
+    hero.blueprint = saved.blueprint;
+    hero.condition = saved.condition;
+    hero.resources = saved.resources;
+    hero.habits = saved.habits;
+    hero.skills = saved.skills;
+    hero.assets = saved.assets;
+    hero.job = saved.job;
+    hero.friends = saved.friends;
+    hero.partner = saved.partner;
+    hero.superpowers = saved.superpowers;
+    hero.inventory = saved.inventory;
+    hero.chapters = saved.chapters;
+    this.hero = hero;
+    this.upcomingSteps = state.upcomingSteps;
+    this.turnNumber = state.turnNumber;
+    this.status = state.status;
+    this.history = state.history;
+    const steps = [
+      ...state.upcomingSteps,
+      ...saved.inventory,
+      ...state.history.flatMap((entry) => [
+        ...(entry.resolvedStep ? [entry.resolvedStep] : []),
+        ...entry.heroAfter.inventory,
+      ]),
+    ];
+    this.stepFactory.reserveInstanceIds(steps);
+    const heroNumber = /^hero-(\d+)$/.exec(saved.id);
+    if (heroNumber && Number.isSafeInteger(Number(heroNumber[1])))
+      this.gameNumber = Math.max(this.gameNumber, Number(heroNumber[1]));
+    return this.getState();
   }
 
   private rollDie(): number {

@@ -5,7 +5,9 @@ import {
   type BlueprintResult,
   type RandomSource,
   type TraitResult,
+  type BlueprintLevel,
 } from '../starting-blueprint/model/starting-blueprint';
+import { isRecord } from '../simulation/model/game-state';
 import {
   CHAPTER_LEVEL_LABELS,
   CHAPTER_CLOSING_TEXTS,
@@ -32,6 +34,42 @@ export interface ChapterVisual {
 
 export type ChapterStage = 'ready' | 'animating' | 'completed';
 
+export interface ChapterProgress {
+  tap: number;
+  name: string;
+  levels: BlueprintLevel[];
+  closingText: string;
+}
+
+export function readChapterProgress(value: unknown): ChapterProgress {
+  if (
+    !isRecord(value) ||
+    typeof value['tap'] !== 'number' ||
+    !Number.isInteger(value['tap']) ||
+    value['tap'] < 0 ||
+    value['tap'] > 6 ||
+    typeof value['name'] !== 'string' ||
+    (value['tap'] < 2
+      ? value['name'] !== ''
+      : !MALE_NAMES.some((name) => name.toUpperCase() === value['name'])) ||
+    !Array.isArray(value['levels']) ||
+    value['levels'].length !== Math.max(0, value['tap'] - 2) ||
+    !value['levels'].every(
+      (level: unknown): level is BlueprintLevel =>
+        typeof level === 'number' && Number.isInteger(level) && level >= 1 && level <= 4,
+    ) ||
+    typeof value['closingText'] !== 'string' ||
+    (value['tap'] < 6 ? value['closingText'] !== '' : value['closingText'].length === 0)
+  )
+    throw new Error('Invalid saved blueprint chapter.');
+  return {
+    tap: value['tap'],
+    name: value['name'],
+    levels: [...value['levels']],
+    closingText: value['closingText'],
+  };
+}
+
 /** Six accepted taps; visual callbacks cannot survive a reset or route disposal. */
 export class BlueprintChapter {
   private generation = 0;
@@ -57,6 +95,58 @@ export class BlueprintChapter {
       tap: this.tap,
       closingText: this.closingText,
     };
+  }
+
+  get progress(): ChapterProgress {
+    return {
+      tap: this.tap,
+      name: this.name,
+      levels: this.traits.map((trait) => trait.level),
+      closingText: this.closingText,
+    };
+  }
+
+  restoreProgress(value: unknown): void {
+    const progress = readChapterProgress(value);
+    if (this.destroyed) throw new Error('Cannot restore a disposed chapter.');
+    this.generation++;
+    this.visual.reset();
+    this.rows = [];
+    this.stage = 'ready';
+    this.tap = progress.tap;
+    this.name = progress.name;
+    this.closingText = progress.closingText;
+    this.traits = progress.levels.map((level, index) => ({
+      trait: CHAPTER_TRAITS[index].key,
+      level,
+      label: CHAPTER_LEVEL_LABELS[CHAPTER_TRAITS[index].key][level - 1],
+    }));
+    if (this.tap > 0) {
+      this.rows = [{ label: CHAPTER_TEXT.nameLabel, value: this.name, raised: this.tap === 1 }];
+      for (const result of this.traits) {
+        this.rows.push({
+          label: CHAPTER_TRAITS[this.rows.length - 1].label,
+          value: `${result.level}${CHAPTER_TEXT.valueSeparator}${result.label}`,
+          raised: false,
+        });
+      }
+      if (this.tap >= 2 && this.tap < 6)
+        this.rows.push({ label: CHAPTER_TRAITS[this.tap - 2].label, value: '', raised: true });
+      this.stage = 'animating';
+    }
+    this.changed();
+    if (this.tap > 0) this.presentReveal();
+  }
+
+  private finishReveal(): void {
+    if (this.destroyed || this.stage !== 'animating') return;
+    this.stage = this.tap === 6 ? 'completed' : 'ready';
+    this.changed();
+    if (this.stage === 'completed') {
+      const blueprint = toBlueprintResult(this.traits);
+      if (!blueprint) throw new Error('The completed chapter must contain all four traits.');
+      this.completed({ name: this.name, blueprint });
+    }
   }
 
   advance(): boolean {
@@ -92,9 +182,14 @@ export class BlueprintChapter {
     }
     this.tap++;
     this.stage = 'animating';
+    this.changed();
+    this.presentReveal();
+    return true;
+  }
+
+  private presentReveal(): void {
     const generation = this.generation;
     const tap = this.tap;
-    this.changed();
     this.visual.present(
       structuredClone(this.rows),
       () => {
@@ -105,17 +200,10 @@ export class BlueprintChapter {
           this.stage !== 'animating'
         )
           return;
-        this.stage = this.tap === 6 ? 'completed' : 'ready';
-        this.changed();
-        if (this.stage === 'completed') {
-          const blueprint = toBlueprintResult(this.traits);
-          if (!blueprint) throw new Error('The completed chapter must contain all four traits.');
-          this.completed({ name: this.name, blueprint });
-        }
+        this.finishReveal();
       },
       this.closingText,
     );
-    return true;
   }
 
   reset(): void {

@@ -2,9 +2,10 @@ import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { MALE_NAMES } from '../blueprint-water/chapter.constants';
+import { MALE_NAMES } from '../chapter-one/chapter.constants';
 import { routes } from '../app.routes';
 import { CHAPTER_TWO_STATUS_BAR, ChapterTwoPage, moodToDisposition } from './chapter-two';
+import { LIFE_SAVE_KEY } from '../life-save';
 
 describe('moodToDisposition', () => {
   it.each([
@@ -26,6 +27,7 @@ describe('ChapterTwoPage', () => {
   };
 
   beforeEach(() => {
+    localStorage.removeItem(LIFE_SAVE_KEY);
     TestBed.configureTestingModule({ providers: [provideRouter(routes)] });
   });
 
@@ -52,6 +54,9 @@ describe('ChapterTwoPage', () => {
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
     root.querySelector<HTMLButtonElement>('.continue')!.click();
     await harness.fixture.whenStable();
-    expect(navigate).toHaveBeenCalledWith('/game', { state: { blueprintChapter: chapter } });
+    expect(navigate).toHaveBeenCalledWith('/game', {
+      replaceUrl: true,
+      state: { blueprintChapter: chapter },
+    });
   });
 });

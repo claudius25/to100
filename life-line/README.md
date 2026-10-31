@@ -31,8 +31,11 @@ CSS custom properties such as `--status-bar-track-height`,
 
 ## Play TO100
 
-Run `npm start` and open **http://localhost:4200/game**, or choose **Play TO100**
-on the home page. The game route is available in both development and production.
+Run `npm start` and open **http://localhost:4200/**. The home page is the TO100
+launcher: **Play** starts Chapter 1 when there is no save. With a saved life,
+**NEW LIFE** replaces it and starts Chapter 1 again, while **Continue** resumes it.
+Continue is hidden until a life has been saved. All game routes are available
+in both development and production.
 
 The standalone page in `src/app/game/` uses the same Angular-independent
 `GameEngine` as the simulation. Its full-screen landscape has a pale textured sky,
@@ -57,28 +60,41 @@ Use **State & debug** to open an overlay for blueprint, inventory, journey log, 
 or reset, even while the previous board is being used for the presentation-only
 slide. The texture and silhouette are local SVG artwork; no Three.js is used here.
 
-Opening `/game` directly starts a new in-memory game with the model's default
-blueprint (all four traits at 50). Completing `/blueprint-water` first supplies the
-hero's name, mapped blueprint, and Chapter 1 record instead. New game resets the
-journey while retaining that origin, if present. Reloading restarts the journey;
-the origin remains in that browser history entry, but turns are not saved.
+Progress is automatically stored in this browser's `localStorage` under
+`to100.life.v1`: unfinished Chapter 1 choices, Chapter 2 and its blueprint, or the
+main game's hero, age, conditions, money, inventory, chapters, turn history,
+upcoming encounters, and pending encounter popup. Reloading preserves progress.
+Chapter 1 resumes its existing reveal without re-rolling choices; a game interrupted
+during landing resumes at its pending popup without reapplying effects. An
+acknowledged encounter resumes on the settled board, not midway through scrolling.
+Browser Back returns to the launcher because chapter transitions replace their
+history entries. Continue restores the saved route, not an older chapter.
+Invalid saves and storage failures show an explicit warning. Saves belong to the
+browser and origin (host and port); they are not shared automatically between PC
+and phone, and clearing site data removes them.
+
+Opening `/game` directly with no existing save starts with the model's default
+blueprint (all four traits at 50). An unrelated old route cannot overwrite a saved
+life: it returns to the launcher. The game screen's **New game** still resets turns
+while retaining the current blueprint; the launcher's **NEW LIFE** resets everything.
 The older `/starting-blueprint` tower remains a separate prototype.
 
 ### Full-viewport landscape layout
 
-`/blueprint-water`, `/chapter-2`, and `/game` share one persistent landscape/fullscreen
+`/`, `/chapter-1`, `/chapter-2`, and `/game` share one persistent landscape/fullscreen
 layout (`src/app/landscape-viewport/game-viewport.ts`). Press **Play** once: moving
 between these pages keeps the same fullscreen element and orientation lock, without
-showing the launcher again. Home and development playgrounds stay outside this layout.
-Leaving the game layout or refreshing the page requires **Play** again.
+showing the launcher again. Returning home shows the launcher choices without
+discarding the life or recreating the fullscreen element. Development playgrounds
+stay outside this layout. After a refresh, entering fullscreen requires a new tap.
 
-Both `/game` and `/blueprint-water` fill the available viewport, including after
+Both `/game` and `/chapter-1` fill the available viewport, including after
 resizing or rotating the device. Controls and debugging panels overlay the scene;
 they do not reserve space below it or create a scrolling page. Scroll inside an
 open debug panel instead. Controls account for device safe-area insets.
 
-On entry, a launcher displays `src/assets/launcher.png` with a centered **Play**
-button. The same image blocks interaction on portrait touch devices until the
+On entry, a launcher displays `src/assets/launcher.png` with buttons at the bottom
+right. The same image blocks interaction on portrait touch devices until the
 device is landscape. It does not reset the chapter or game. Turn off the device's
 rotation lock if necessary. Desktop portrait windows remain usable.
 An active game encounter popup temporarily closes in portrait and reopens when
@@ -93,9 +109,12 @@ Exiting fullscreen releases any orientation lock acquired by the page.
 
 ## Raised-label blueprint / Chapter 1
 
-Open **http://localhost:4200/blueprint-water**, or choose **Chapter 1 · Liquid
-blueprint** on the home page. This is a separate standalone `BlueprintWater`
+Open **http://localhost:4200/chapter-1**, or choose **Play** / **NEW LIFE**
+on the home page. This is a separate standalone `ChapterOnePage`
 component, not a replacement for the tower.
+
+Existing `/blueprint-water` links redirect to `/chapter-1`; saved Chapter 1
+progress from the old URL is retained.
 
 The scene starts as a blank surface. Six taps (or Enter/Space on the scene) reveal:
 
@@ -131,7 +150,7 @@ Native mobile tap highlighting is disabled, without removing keyboard focus outl
 
 ### Tweaking Chapter 1
 
-Edit `src/app/blueprint-water/chapter.constants.ts`:
+Edit `src/app/chapter-one/chapter.constants.ts`:
 
 - `MALE_NAMES`: the 100 short male names.
 - `CHAPTER_TEXT`, `CHAPTER_TRAITS`, `CHAPTER_LEVEL_LABELS`: chapter copy, row labels,
@@ -225,7 +244,7 @@ levels 1/2/3/4 map to 25/50/75/100, with health blueprint mapped to
 `physicalResilience`. The game engine records Chapter 1 in `Hero.chapters`.
 Family finances do not grant personal money, and starting condition values remain 100. Traits still have no passive gameplay effects.
 
-Implementation under `src/app/blueprint-water/`:
+Implementation under `src/app/chapter-one/`:
 
 - `blueprint-chapter.ts`: Angular-free six-tap sequence, names, typed rows and result.
 - `relief-scene.ts`: raised and inset letter geometry, label hit-testing, lighting,
@@ -241,7 +260,7 @@ its embedded Magenta font license. Three.js/water-example attribution is preserv
 in `public/blueprint-water/THREE-LICENSE.txt`; the renderer uses the existing npm
 Three.js dependency rather than copying the archive's bundled library.
 
-Focused validation: `npm test -- --watch=false --include=src/app/blueprint-water`.
+Focused validation: `npm test -- --watch=false --include=src/app/chapter-one`.
 
 ## Starting blueprint
 

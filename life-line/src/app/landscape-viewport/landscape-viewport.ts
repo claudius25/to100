@@ -3,9 +3,11 @@ import {
   afterNextRender,
   ChangeDetectionStrategy,
   Component,
+  computed,
   DestroyRef,
   ElementRef,
   inject,
+  input,
   output,
   signal,
 } from '@angular/core';
@@ -21,6 +23,12 @@ type LandscapeOrientation = ScreenOrientation & {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LandscapeViewport {
+  readonly menu = input(false);
+  readonly hasSavedLife = input(false);
+  readonly saveError = input('');
+  readonly busy = input(false);
+  readonly newLife = output<void>();
+  readonly continueLife = output<void>();
   readonly portraitChange = output<boolean>();
   private readonly document = inject(DOCUMENT);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
@@ -34,6 +42,9 @@ export class LandscapeViewport {
   protected readonly fullscreen = signal(false);
   protected readonly requestingFullscreen = signal(false);
   protected readonly fullscreenNotice = signal('');
+  readonly contentActive = computed(
+    () => !this.menu() && !this.portraitBlocked() && this.launched(),
+  );
 
   constructor() {
     afterNextRender(() => {
@@ -64,8 +75,8 @@ export class LandscapeViewport {
     });
   }
 
-  protected async play(): Promise<void> {
-    if (this.requestingFullscreen()) return;
+  protected async play(choice: 'new' | 'continue' = 'new'): Promise<void> {
+    if (this.requestingFullscreen() || this.busy()) return;
     this.requestingFullscreen.set(true);
     this.fullscreenNotice.set('');
     try {
@@ -97,6 +108,10 @@ export class LandscapeViewport {
     } finally {
       if (!this.disposed) this.launched.set(true);
       this.requestingFullscreen.set(false);
+      if (!this.disposed && this.menu()) {
+        if (choice === 'new') this.newLife.emit();
+        else this.continueLife.emit();
+      }
     }
   }
 

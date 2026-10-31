@@ -4,7 +4,7 @@ import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { routes } from '../app.routes';
 import { GameEngine } from '../simulation/model/game-engine';
-import { Home } from '../home/home';
+import { LIFE_SAVE_KEY, LifeSaveStore } from '../life-save';
 import { LandscapeViewport } from '../landscape-viewport/landscape-viewport';
 import { GamePage } from './game';
 
@@ -52,8 +52,9 @@ describe('GamePage', () => {
   });
 
   beforeEach(async () => {
+    localStorage.removeItem(LIFE_SAVE_KEY);
     await TestBed.configureTestingModule({
-      imports: [GamePage, Home],
+      imports: [GamePage],
       providers: [provideRouter(routes)],
     }).compileComponents();
   });
@@ -62,11 +63,11 @@ describe('GamePage', () => {
     vi.restoreAllMocks();
   });
 
-  it('is linked from home and reachable at /game', async () => {
+  it('shows the launcher at home and is reachable at /game', async () => {
     const harness = await RouterTestingHarness.create();
-    await harness.navigateByUrl('/', Home);
-    expect(harness.routeNativeElement?.querySelector('a[href="/game"]')?.textContent).toContain(
-      'Play TO100',
+    await harness.navigateByUrl('/');
+    expect(harness.routeNativeElement?.querySelector('.fullscreen-toggle')?.textContent).toContain(
+      'Play',
     );
     await harness.navigateByUrl('/game');
     expect(harness.routeNativeElement?.textContent).toContain('TO100');
@@ -79,11 +80,50 @@ describe('GamePage', () => {
     expect(details.open).toBe(true);
   });
 
+  it('continues an unresolved encounter without rolling or applying effects twice', async () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    const roll = vi.spyOn(GameEngine.prototype, 'rollTurn');
+    const harness = await RouterTestingHarness.create('/game');
+    await harness.fixture.whenStable();
+    harness.routeNativeElement!.querySelector<HTMLButtonElement>('.fullscreen-toggle')!.click();
+    await harness.fixture.whenStable();
+    harness.routeNativeElement!.querySelector<HTMLButtonElement>('.roll-button')!.click();
+    await harness.fixture.whenStable();
+    const saved = TestBed.inject(LifeSaveStore).savedLife();
+    if (saved?.route !== '/game') throw new Error('Expected a saved game.');
+    expect(saved.pendingEncounter).toBe(true);
+    await harness.navigateByUrl('/');
+    harness.routeNativeElement!.querySelector<HTMLButtonElement>('.continue-life')!.click();
+    await harness.fixture.whenStable();
+    const root = harness.routeNativeElement!;
+    const dialog = root.querySelector<HTMLDialogElement>('dialog')!;
+    expect(dialog.open).toBe(true);
+    expect(root.querySelector<HTMLButtonElement>('.roll-button')!.disabled).toBe(true);
+    expect(roll).toHaveBeenCalledOnce();
+    const restored = TestBed.inject(LifeSaveStore).savedLife();
+    if (restored?.route !== '/game') throw new Error('Expected a restored game.');
+    expect(restored.game).toEqual(saved.game);
+    dialog.querySelector<HTMLButtonElement>('button')!.click();
+    await harness.fixture.whenStable();
+    await harness.navigateByUrl('/');
+    harness.routeNativeElement!.querySelector<HTMLButtonElement>('.continue-life')!.click();
+    await harness.fixture.whenStable();
+    expect(harness.routeNativeElement!.querySelector<HTMLDialogElement>('dialog')!.open).toBe(
+      false,
+    );
+    expect(
+      harness.routeNativeElement!.querySelector<HTMLButtonElement>('.roll-button')!.disabled,
+    ).toBe(false);
+    expect(roll).toHaveBeenCalledOnce();
+  });
+
   it('renders the model, delegates rolls, and keeps JSON and upcoming encounters synchronized', async () => {
     vi.spyOn(Math, 'random').mockReturnValue(0);
     const roll = vi.spyOn(GameEngine.prototype, 'rollTurn');
     const harness = await RouterTestingHarness.create('/game');
     const fixture = harness.fixture;
+    await fixture.whenStable();
+    fixture.nativeElement.querySelector('.fullscreen-toggle').click();
     await fixture.whenStable();
     const element = fixture.nativeElement as HTMLElement;
     const readState = () => {

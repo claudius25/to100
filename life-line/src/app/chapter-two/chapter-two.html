@@ -13,6 +13,9 @@
     <h1>{{ name }}</h1>
   </section>
   <footer class="footer">
+    @if (navigationError()) {
+      <p role="alert">{{ navigationError() }}</p>
+    }
     <button class="continue" type="button" [disabled]="navigating()" (click)="continueToGame()">
       Continue
     </button>

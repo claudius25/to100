@@ -33,6 +33,24 @@ describe('LandscapeViewport', () => {
     vi.clearAllMocks();
   });
 
+  it('only shows Continue when a saved life exists', async () => {
+    const fixture = TestBed.createComponent(LandscapeViewport);
+    fixture.componentRef.setInput('menu', true);
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('.continue-life')).toBeNull();
+
+    fixture.componentRef.setInput('hasSavedLife', true);
+    await fixture.whenStable();
+    const continueButton = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>(
+      '.continue-life',
+    )!;
+    expect(continueButton.disabled).toBe(false);
+
+    fixture.componentRef.setInput('hasSavedLife', false);
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('.continue-life')).toBeNull();
+  });
+
   it('blocks portrait touch screens and unblocks on rotation without recreating the content', async () => {
     portrait = true;
     const fixture = TestBed.createComponent(LandscapeViewport);

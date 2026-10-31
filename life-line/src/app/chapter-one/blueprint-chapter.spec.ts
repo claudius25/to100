@@ -36,6 +36,37 @@ function setup(samples = [0, 0, 0.25, 0.5, 0.99]) {
 }
 
 describe('BlueprintChapter', () => {
+  it.each([0, 1, 2, 3, 4, 5, 6])(
+    'restores accepted tap %s without re-rolling its name or traits',
+    (tap) => {
+      const original = setup();
+      for (let index = 0; index < tap; index++) {
+        original.chapter.advance();
+        original.finish();
+      }
+      const resumed = setup();
+      resumed.chapter.restoreProgress(JSON.parse(JSON.stringify(original.chapter.progress)));
+      if (tap > 0) resumed.finish();
+      expect(resumed.chapter.snapshot).toEqual(original.chapter.snapshot);
+      expect(resumed.random).not.toHaveBeenCalled();
+      expect(resumed.chapter.progress).toEqual(original.chapter.progress);
+    },
+  );
+
+  it('rejects invalid chapter progress and ignores callbacks from an earlier restoration', () => {
+    const ctx = setup();
+    ctx.chapter.restoreProgress({ tap: 1, name: '', levels: [], closingText: '' });
+    const stale = ctx.callbacks.shift()!;
+    ctx.chapter.reset();
+    stale();
+    expect(ctx.chapter.snapshot.tap).toBe(0);
+    expect(ctx.chapter.stage).toBe('ready');
+    expect(() =>
+      ctx.chapter.restoreProgress({ tap: 3, name: 'UNKNOWN', levels: [9], closingText: '' }),
+    ).toThrow();
+    expect(ctx.chapter.snapshot.tap).toBe(0);
+  });
+
   it('has exactly 100 unique short male names and can select both endpoints', () => {
     expect(MALE_NAMES).toHaveLength(100);
     expect(new Set(MALE_NAMES).size).toBe(100);

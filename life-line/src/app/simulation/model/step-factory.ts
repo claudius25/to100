@@ -60,4 +60,12 @@ export class StepFactory {
       ),
     ];
   }
+
+  reserveInstanceIds(steps: readonly Step[]): void {
+    for (const step of steps) {
+      const match = /^step-(\d+)$/.exec(step.id);
+      if (match && Number.isSafeInteger(Number(match[1])))
+        this.nextInstanceId = Math.max(this.nextInstanceId, Number(match[1]));
+    }
+  }
 }

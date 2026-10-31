@@ -1,4 +1,4 @@
-import { CHAPTER_LEVEL_LABELS } from '../../blueprint-water/chapter.constants';
+import { CHAPTER_LEVEL_LABELS } from '../../chapter-one/chapter.constants';
 
 /**
  * Starting traits revealed before a life begins. They describe starting

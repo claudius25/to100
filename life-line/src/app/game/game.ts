@@ -6,6 +6,7 @@ import {
   computed,
   DestroyRef,
   ElementRef,
+  effect,
   inject,
   Injector,
   signal,
@@ -13,10 +14,11 @@ import {
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { LandscapeViewport } from '../landscape-viewport/landscape-viewport';
-import { readBlueprintChapter, toHeroStartingState } from '../blueprint-water/hero-blueprint';
+import { readBlueprintChapter, toHeroStartingState } from '../chapter-one/hero-blueprint';
 import { GameEngine } from '../simulation/model/game-engine';
 import type { Step } from '../simulation/model/step';
 import { TARGET_AGE_WEEKS } from '../simulation/model/types';
+import { LifeSaveStore } from '../life-save';
 
 @Component({
   selector: 'app-game',
@@ -29,9 +31,14 @@ export class GamePage {
   private portraitBlocked = false;
   private readonly engine = new GameEngine();
   private readonly injector = inject(Injector);
-  private readonly origin = readBlueprintChapter(
-    inject(Router).currentNavigation()?.extras.state ?? inject(Location).getState(),
-  );
+  private readonly store = inject(LifeSaveStore);
+  private readonly saved = this.store.savedLife();
+  private readonly origin =
+    this.saved?.route === '/game' || this.saved?.route === '/chapter-2'
+      ? this.saved.origin
+      : readBlueprintChapter(
+          inject(Router).currentNavigation()?.extras.state ?? inject(Location).getState(),
+        );
 
   protected readonly state = signal(this.engine.getState());
   protected readonly targetAgeWeeks = TARGET_AGE_WEEKS;
@@ -57,16 +64,36 @@ export class GamePage {
   constructor() {
     const viewport = inject(LandscapeViewport, { optional: true });
     if (viewport) {
-      this.portraitBlocked = viewport.portraitBlocked();
+      this.portraitBlocked = !viewport.contentActive();
       const subscription = viewport.portraitChange.subscribe((blocked) =>
         this.changeOrientation(blocked),
       );
       inject(DestroyRef).onDestroy(() => subscription.unsubscribe());
+      afterNextRender(() => {
+        effect(() => this.changeOrientation(!viewport.contentActive()), {
+          injector: this.injector,
+        });
+      });
     }
-    if (this.origin) {
+    if (this.saved?.route === '/game') {
+      this.state.set(this.engine.restoreState(this.saved.game));
+      this.displayedSteps.set(
+        this.saved.pendingEncounter ? this.saved.board : this.state().upcomingSteps,
+      );
+      const last = this.lastTurn();
+      this.cameraWeeks.set(
+        this.state().hero.ageWeeks - (this.saved.pendingEncounter ? last!.weeksAdvanced : 0),
+      );
+      if (this.saved.pendingEncounter) {
+        this.phase.set('encounter');
+        this.landingPosition.set(last!.status === 'completed' ? 95 : 7 + last!.diceSum * 7);
+        if (!viewport) afterNextRender(() => this.encounterDialog().nativeElement.showModal());
+      }
+    } else if (this.origin) {
       this.state.set(this.engine.startNewGame(this.origin.name, toHeroStartingState(this.origin)));
       this.displayedSteps.set(this.state().upcomingSteps);
     }
+    this.saveProgress();
   }
 
   protected rollDice(): void {
@@ -80,6 +107,7 @@ export class GamePage {
     this.state.set(this.engine.getState());
     this.landingPosition.set(turn.status === 'completed' ? 95 : 7 + turn.diceSum * 7);
     this.phase.set('landing');
+    this.saveProgress();
   }
 
   protected finishSlide(event: AnimationEvent): void {
@@ -111,6 +139,7 @@ export class GamePage {
     if (this.state().status === 'completed') {
       this.phase.set('ready');
       this.displayedSteps.set([]);
+      this.saveProgress();
       return;
     }
     const advanced = this.lastTurn()!.weeksAdvanced;
@@ -119,6 +148,7 @@ export class GamePage {
       ...this.state().upcomingSteps.slice(12 - advanced),
     ]);
     this.phase.set('scrolling');
+    this.saveProgress();
   }
 
   protected finishScroll(event: AnimationEvent): void {
@@ -160,5 +190,18 @@ export class GamePage {
         : this.engine.startNewGame(),
     );
     this.displayedSteps.set(this.state().upcomingSteps);
+    this.saveProgress();
+  }
+
+  private saveProgress(): void {
+    const pendingEncounter = this.phase() === 'landing' || this.phase() === 'encounter';
+    this.store.write({
+      version: 1,
+      route: '/game',
+      origin: this.origin,
+      game: this.state(),
+      pendingEncounter,
+      board: pendingEncounter ? this.displayedSteps() : this.state().upcomingSteps,
+    });
   }
 }

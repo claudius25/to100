@@ -1,23 +1,38 @@
 <div
   class="viewport-content"
-  [class.viewport-content--blocked]="portraitBlocked() || !launched()"
-  [inert]="portraitBlocked() || !launched()"
+  [class.viewport-content--blocked]="menu() || portraitBlocked() || !launched()"
+  [inert]="menu() || portraitBlocked() || !launched()"
 >
   <ng-content />
 </div>
-@if (portraitBlocked() || !launched()) {
+@if (menu() || portraitBlocked() || !launched()) {
   <section class="rotate-prompt" aria-label="TO100 launcher">
     <img class="launcher-image" src="assets/launcher.png" alt="TO100" />
-    <button
-      type="button"
-      class="fullscreen-toggle"
-      [disabled]="requestingFullscreen()"
-      (click)="play()"
-    >
-      Play
-    </button>
+    <div class="launcher-actions">
+      <button
+        type="button"
+        class="fullscreen-toggle"
+        [disabled]="requestingFullscreen() || busy()"
+        (click)="play()"
+      >
+        {{ menu() && (hasSavedLife() || saveError()) ? 'NEW LIFE' : 'Play' }}
+      </button>
+      @if (menu() && hasSavedLife()) {
+        <button
+          type="button"
+          class="fullscreen-toggle continue-life"
+          [disabled]="requestingFullscreen() || busy()"
+          (click)="play('continue')"
+        >
+          Continue
+        </button>
+      }
+    </div>
     @if (portraitBlocked()) {
       <p class="sr-only" role="status">Rotate your device to landscape to continue.</p>
+    }
+    @if (saveError()) {
+      <p class="save-notice" role="alert">{{ saveError() }}</p>
     }
   </section>
 }

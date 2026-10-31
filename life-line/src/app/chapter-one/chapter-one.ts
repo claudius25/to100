@@ -15,6 +15,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { Router } from '@angular/router';
+import { LifeSaveStore } from '../life-save';
 import type { RandomSource } from '../starting-blueprint/model/starting-blueprint';
 import {
   BlueprintChapter,
@@ -44,18 +45,19 @@ import { chapterRevealDuration, resolveChapterTimings } from './chapter-animatio
 type LightToggle = 'keyEnabled' | 'edgeEnabled' | 'ambientEnabled' | 'giEnabled';
 
 @Component({
-  selector: 'app-blueprint-water',
+  selector: 'app-chapter-one',
   imports: [JsonPipe, DecimalPipe],
-  templateUrl: './blueprint-water.html',
-  styleUrl: './blueprint-water.scss',
+  templateUrl: './chapter-one.html',
+  styleUrl: './chapter-one.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class BlueprintWater {
+export class ChapterOnePage {
   readonly random = input<RandomSource | undefined>();
   readonly timings = input<Partial<ChapterTimings>>({});
   readonly blueprintCompleted = output<WaterBlueprintResult>();
   private readonly zone = inject(NgZone);
   private readonly router = inject(Router);
+  private readonly store = inject(LifeSaveStore);
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly host = viewChild.required<ElementRef<HTMLDivElement>>('stage');
   private scene: ReliefScene | null = null;
@@ -274,7 +276,9 @@ export class BlueprintWater {
     this.navigating.set(true);
     this.navigationError.set('');
     try {
+      if (!this.store.write({ version: 1, route: '/chapter-2', origin: result })) return;
       const navigated = await this.router.navigateByUrl('/chapter-2', {
+        replaceUrl: true,
         state: { blueprintChapter: structuredClone(result) },
       });
       if (!navigated) this.navigationError.set(CHAPTER_TEXT.navigationFailed);
@@ -288,6 +292,17 @@ export class BlueprintWater {
 
   private async initialise(): Promise<void> {
     if (!this.browser || this.disposed) return;
+    const saved = this.store.savedLife();
+    if (saved && saved.route !== '/chapter-1') {
+      try {
+        if (!(await this.router.navigateByUrl('/', { replaceUrl: true })))
+          this.navigationError.set(CHAPTER_TEXT.navigationFailed);
+      } catch (error) {
+        console.error('Could not return to the life launcher.', error);
+        this.navigationError.set(CHAPTER_TEXT.navigationFailed);
+      }
+      return;
+    }
     this.reducedMotion.set(
       window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false,
     );
@@ -326,13 +341,22 @@ export class BlueprintWater {
     };
     this.chapter = new BlueprintChapter(
       visual,
-      () => this.snapshot.set(this.chapter!.snapshot),
+      () => {
+        this.snapshot.set(this.chapter!.snapshot);
+        this.store.write({
+          version: 1,
+          route: '/chapter-1',
+          chapter: this.chapter!.progress,
+        });
+      },
       (result) => {
         this.result.set(structuredClone(result));
         this.blueprintCompleted.emit(structuredClone(result));
       },
       this.random(),
     );
+    if (saved?.route === '/chapter-1') this.chapter.restoreProgress(saved.chapter);
+    else this.store.write({ version: 1, route: '/chapter-1', chapter: this.chapter.progress });
   }
 
   private presentRows(rows: readonly ReliefRow[], done: () => void, closingText?: string): void {

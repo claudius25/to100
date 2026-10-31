@@ -1,13 +1,8 @@
 import { isDevMode } from '@angular/core';
 import { Routes } from '@angular/router';
+import { savedLifeGuard } from './life-save';
 
 export const routes: Routes = [
-  {
-    path: '',
-    pathMatch: 'full',
-    title: 'Life Line',
-    loadComponent: () => import('./home/home').then((m) => m.Home),
-  },
   {
     path: 'character-lab',
     title: 'Life Line — Character Lab',
@@ -16,12 +11,24 @@ export const routes: Routes = [
   {
     path: '',
     loadComponent: () => import('./landscape-viewport/game-viewport').then((m) => m.GameViewport),
+    canActivateChild: [savedLifeGuard],
     children: [
       {
-        path: 'blueprint-water',
-        title: 'TO100 — Chapter 1',
+        path: '',
+        pathMatch: 'full',
+        title: 'TO100',
         loadComponent: () =>
-          import('./blueprint-water/blueprint-water').then((m) => m.BlueprintWater),
+          import('./landscape-viewport/game-viewport').then((m) => m.LifeLauncher),
+      },
+      {
+        path: 'blueprint-water',
+        pathMatch: 'full',
+        redirectTo: 'chapter-1',
+      },
+      {
+        path: 'chapter-1',
+        title: 'TO100 — Chapter 1',
+        loadComponent: () => import('./chapter-one/chapter-one').then((m) => m.ChapterOnePage),
       },
       {
         path: 'chapter-2',
