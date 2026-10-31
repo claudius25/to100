@@ -28,7 +28,7 @@ export class LandscapeViewport {
   private orientationLocked = false;
   private disposed = false;
 
-  protected readonly portraitBlocked = signal(false);
+  readonly portraitBlocked = signal(false);
   protected readonly launched = signal(false);
   protected readonly fullscreenAvailable = signal(false);
   protected readonly fullscreen = signal(false);

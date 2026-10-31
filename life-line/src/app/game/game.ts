@@ -4,6 +4,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   ElementRef,
   inject,
   Injector,
@@ -19,7 +20,7 @@ import { TARGET_AGE_WEEKS } from '../simulation/model/types';
 
 @Component({
   selector: 'app-game',
-  imports: [JsonPipe, RouterLink, LandscapeViewport],
+  imports: [JsonPipe, RouterLink],
   templateUrl: './game.html',
   styleUrl: './game.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -54,6 +55,14 @@ export class GamePage {
   };
 
   constructor() {
+    const viewport = inject(LandscapeViewport, { optional: true });
+    if (viewport) {
+      this.portraitBlocked = viewport.portraitBlocked();
+      const subscription = viewport.portraitChange.subscribe((blocked) =>
+        this.changeOrientation(blocked),
+      );
+      inject(DestroyRef).onDestroy(() => subscription.unsubscribe());
+    }
     if (this.origin) {
       this.state.set(this.engine.startNewGame(this.origin.name, toHeroStartingState(this.origin)));
       this.displayedSteps.set(this.state().upcomingSteps);

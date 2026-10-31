@@ -1,0 +1,157 @@
+@property --status-health-start {
+  syntax: '<color>';
+  inherits: false;
+  initial-value: #66c7a2;
+}
+
+@property --status-health-end {
+  syntax: '<color>';
+  inherits: false;
+  initial-value: #abe0cc;
+}
+
+:host {
+  --status-bar-track-height: clamp(40px, 6vw, 64px);
+  --status-bar-padding: calc(var(--status-bar-track-height) * 0.16);
+  --status-bar-duration: 400ms;
+  --status-bar-surface: #eeeff0;
+  --status-bar-track: #e4e5e7;
+  --status-bar-ink: #59616c;
+  --status-bar-purple: #9461d4;
+  --status-bar-ring-track: #e1dde8;
+  --status-bar-shadow: 9px 9px 24px #00000018, -7px -7px 20px #ffffffb3;
+  --status-bar-inner-shadow: inset 3px 4px 9px #0000001a, inset -2px -2px 5px #ffffffb3;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.status-bar {
+  --face-size: var(--status-bar-track-height);
+  --face-inset: calc(var(--face-size) / 2);
+  display: flex;
+  align-items: center;
+  // gap: clamp(10px, 2vw, 24px);
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--status-bar-padding);
+  border: 1px solid #ffffffcc;
+  border-radius: 999px;
+  background: linear-gradient(160deg, #f6f6f7, var(--status-bar-surface));
+  box-shadow:
+    var(--status-bar-shadow),
+    inset 0 1px 2px #fff;
+  color: var(--status-bar-ink);
+}
+
+.health-track {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: var(--face-size);
+  height: var(--status-bar-track-height);
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: 999px;
+  background: var(--status-bar-track);
+  box-shadow:
+    var(--status-bar-inner-shadow),
+    0 1px 2px #fff;
+}
+
+.face-travel {
+  position: absolute;
+  inset: 0 var(--face-inset);
+}
+
+// Fill and face share the same travel width; the fill ends exactly at the face center.
+.health-fill {
+  position: absolute;
+  inset-block: 0;
+  left: calc(0px - var(--face-inset));
+  width: calc(var(--health-position) + var(--face-inset));
+  background: linear-gradient(100deg, var(--status-health-start), var(--status-health-end));
+  box-shadow: var(--status-bar-inner-shadow);
+  transition:
+    width var(--status-bar-duration) ease,
+    --status-health-start var(--status-bar-duration) ease,
+    --status-health-end var(--status-bar-duration) ease;
+}
+
+.face {
+  position: absolute;
+  top: 50%;
+  left: var(--health-position);
+  width: var(--face-size);
+  height: var(--face-size);
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(1px 2px 3px #0000001c);
+  transition: left var(--status-bar-duration) ease;
+}
+
+.face-background {
+  fill: #f5f5f6;
+  stroke: #fff;
+  stroke-width: 1;
+}
+
+.ring-track,
+.age-ring {
+  fill: none;
+  stroke-width: 7.2;
+}
+
+.ring-track {
+  stroke: var(--status-bar-ring-track);
+}
+
+.age-ring {
+  stroke: var(--status-bar-purple);
+  transition: stroke-dashoffset var(--status-bar-duration) ease;
+}
+
+.expression {
+  fill: var(--status-bar-ink);
+}
+
+.mouth {
+  fill: none;
+  stroke: var(--status-bar-ink);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+
+.money {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: calc(var(--status-bar-track-height) * 0.2);
+  padding-inline: calc(var(--status-bar-track-height) * 0.35)
+    calc(var(--status-bar-track-height) * 0.18);
+  min-height: calc(var(--status-bar-track-height) - 8px);
+  font-size: calc(var(--status-bar-track-height) * 0.44);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.coins {
+  width: 1.1em;
+  height: 1.4em;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.money-amount {
+  // min-width: 4.3ch;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .health-fill,
+  .face,
+  .age-ring {
+    transition: none;
+  }
+}

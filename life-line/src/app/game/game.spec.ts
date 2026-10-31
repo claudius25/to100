@@ -68,7 +68,7 @@ describe('GamePage', () => {
     expect(harness.routeNativeElement?.querySelector('a[href="/game"]')?.textContent).toContain(
       'Play TO100',
     );
-    await harness.navigateByUrl('/game', GamePage);
+    await harness.navigateByUrl('/game');
     expect(harness.routeNativeElement?.textContent).toContain('TO100');
     const details = harness.routeNativeElement!.querySelector<HTMLDetailsElement>('.game-details')!;
     expect(details.open).toBe(false);
@@ -82,7 +82,8 @@ describe('GamePage', () => {
   it('renders the model, delegates rolls, and keeps JSON and upcoming encounters synchronized', async () => {
     vi.spyOn(Math, 'random').mockReturnValue(0);
     const roll = vi.spyOn(GameEngine.prototype, 'rollTurn');
-    const fixture = TestBed.createComponent(GamePage);
+    const harness = await RouterTestingHarness.create('/game');
+    const fixture = harness.fixture;
     await fixture.whenStable();
     const element = fixture.nativeElement as HTMLElement;
     const readState = () => {

@@ -1,0 +1,160 @@
+<main class="playground" [class.playground--dark]="darkBackground()">
+  <div class="content">
+    <header>
+      <div>
+        <p class="eyebrow">TO100 / UI playground</p>
+        <h1>Status bar</h1>
+        <p class="intro">Four independent values. One quiet view of a life.</p>
+      </div>
+      <button
+        type="button"
+        class="background-toggle"
+        [attr.aria-pressed]="darkBackground()"
+        (click)="darkBackground.set(!darkBackground())"
+      >
+        {{ darkBackground() ? 'Light background' : 'Dark background' }}
+      </button>
+    </header>
+
+    <section class="preview" aria-label="Interactive status bar preview">
+      <app-status-bar
+        [health]="health()"
+        [disposition]="disposition()"
+        [age]="age()"
+        [money]="money()"
+        [width]="width() || null"
+        [height]="height()"
+      />
+    </section>
+
+    <section class="controls" aria-labelledby="controls-title">
+      <h2 id="controls-title">Explore the values</h2>
+      <div class="control-grid">
+        <div class="control">
+          <label for="health"
+            >Health <output for="health">{{ health() }} / 100</output></label
+          >
+          <input
+            id="health"
+            type="range"
+            min="0"
+            max="100"
+            step="1"
+            [value]="health()"
+            (input)="update('health', $event)"
+          />
+        </div>
+        <div class="control">
+          <label for="disposition"
+            >Disposition
+            <output for="disposition">{{ disposition() }} / {{ expressionName() }}</output></label
+          >
+          <input
+            id="disposition"
+            type="range"
+            min="1"
+            max="4"
+            step="1"
+            [value]="disposition()"
+            (input)="update('disposition', $event)"
+          />
+        </div>
+        <div class="control">
+          <label for="age"
+            >Age <output for="age">{{ age() }} years</output></label
+          >
+          <input
+            id="age"
+            type="range"
+            min="0"
+            max="100"
+            step="1"
+            [value]="age()"
+            (input)="update('age', $event)"
+          />
+        </div>
+        <div class="control">
+          <label for="money"
+            >Money
+            <output for="money money-exact"
+              >{{ rawMoney() }} / {{ abbreviatedMoney() }}</output
+            ></label
+          >
+          <input
+            id="money"
+            type="range"
+            min="0"
+            max="10000000"
+            step="1"
+            [value]="money()"
+            (input)="update('money', $event)"
+          />
+          <label class="precise" for="money-exact">
+            Precise amount
+            <input
+              id="money-exact"
+              type="number"
+              min="0"
+              max="10000000"
+              step="1"
+              [value]="money()"
+              (input)="update('money', $event)"
+            />
+          </label>
+        </div>
+        <div class="control">
+          <label for="width"
+            >Width
+            <output for="width"
+              >{{ width() ? width() + 'px' : 'auto' }} / {{ aspect() }}</output
+            ></label
+          >
+          <input
+            id="width"
+            type="range"
+            min="0"
+            max="1120"
+            step="1"
+            [value]="width()"
+            (input)="update('width', $event)"
+          />
+        </div>
+        <div class="control">
+          <label for="height"
+            >Height <output for="height">{{ height() }}px</output></label
+          >
+          <input
+            id="height"
+            type="range"
+            min="24"
+            max="120"
+            step="1"
+            [value]="height()"
+            (input)="update('height', $event)"
+          />
+        </div>
+      </div>
+    </section>
+
+    <section class="examples" aria-labelledby="examples-title">
+      <h2 id="examples-title">Through the years</h2>
+      <div class="example-grid">
+        @for (preset of presets; track preset.name) {
+          <article class="example">
+            <h3>{{ preset.name }}</h3>
+            <app-status-bar
+              [health]="preset.health"
+              [disposition]="preset.disposition"
+              [age]="preset.age"
+              [money]="preset.money"
+            />
+            <p>
+              Health {{ preset.health }} / {{ preset.age }} years /
+              {{ preset.money.toLocaleString('en-US') }} money
+            </p>
+          </article>
+        }
+      </div>
+    </section>
+  </div>
+</main>

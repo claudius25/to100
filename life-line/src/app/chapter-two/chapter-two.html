@@ -1,0 +1,20 @@
+<main class="chapter">
+  <app-status-bar
+    class="status"
+    [health]="health"
+    [disposition]="disposition"
+    [age]="age"
+    [money]="money"
+    [width]="statusBar.width"
+    [height]="statusBar.height"
+  />
+  <section class="intro">
+    <p class="eyebrow">Chapter 2</p>
+    <h1>{{ name }}</h1>
+  </section>
+  <footer class="footer">
+    <button class="continue" type="button" [disabled]="navigating()" (click)="continueToGame()">
+      Continue
+    </button>
+  </footer>
+</main>

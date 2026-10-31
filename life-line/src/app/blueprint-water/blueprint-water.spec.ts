@@ -226,7 +226,7 @@ describe('BlueprintWater', () => {
     const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
     root.querySelector<HTMLButtonElement>('.begin')!.click();
     await fixture.whenStable();
-    expect(navigate).toHaveBeenCalledWith('/game', {
+    expect(navigate).toHaveBeenCalledWith('/chapter-2', {
       state: {
         blueprintChapter: {
           name: MALE_NAMES[0].toUpperCase(),
@@ -259,7 +259,7 @@ describe('BlueprintWater', () => {
 
   it('navigates to the new route, hands the blueprint to GameEngine, and preserves it on reset', async () => {
     const harness = await RouterTestingHarness.create();
-    await harness.navigateByUrl('/blueprint-water', BlueprintWater);
+    await harness.navigateByUrl('/blueprint-water');
     expect(harness.routeNativeElement?.querySelector('.scene')).not.toBeNull();
     expect(harness.routeNativeElement?.querySelector('header')).toBeNull();
     await TestBed.inject(Router).navigateByUrl('/game', {

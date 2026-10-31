@@ -15,7 +15,6 @@ import {
   viewChild,
 } from '@angular/core';
 import { Router } from '@angular/router';
-import { LandscapeViewport } from '../landscape-viewport/landscape-viewport';
 import type { RandomSource } from '../starting-blueprint/model/starting-blueprint';
 import {
   BlueprintChapter,
@@ -46,7 +45,7 @@ type LightToggle = 'keyEnabled' | 'edgeEnabled' | 'ambientEnabled' | 'giEnabled'
 
 @Component({
   selector: 'app-blueprint-water',
-  imports: [JsonPipe, DecimalPipe, LandscapeViewport],
+  imports: [JsonPipe, DecimalPipe],
   templateUrl: './blueprint-water.html',
   styleUrl: './blueprint-water.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -275,7 +274,7 @@ export class BlueprintWater {
     this.navigating.set(true);
     this.navigationError.set('');
     try {
-      const navigated = await this.router.navigateByUrl('/game', {
+      const navigated = await this.router.navigateByUrl('/chapter-2', {
         state: { blueprintChapter: structuredClone(result) },
       });
       if (!navigated) this.navigationError.set(CHAPTER_TEXT.navigationFailed);

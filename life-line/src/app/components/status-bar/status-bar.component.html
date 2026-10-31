@@ -1,0 +1,43 @@
+<div
+  class="status-bar"
+  role="img"
+  [attr.aria-label]="accessibleLabel()"
+  [style.--health-position]="renderedHealth() + '%'"
+>
+  <div class="health-track" aria-hidden="true">
+    <div class="face-travel">
+      <div
+        class="health-fill"
+        [style.--status-health-start]="fillColors().start"
+        [style.--status-health-end]="fillColors().end"
+      ></div>
+      <svg class="face" viewBox="0 0 64 64" focusable="false">
+        <circle class="face-background" cx="32" cy="32" r="31.5" />
+        <circle class="ring-track" cx="32" cy="32" r="27" />
+        <circle
+          class="age-ring"
+          cx="32"
+          cy="32"
+          r="27"
+          pathLength="100"
+          stroke-dasharray="100 100"
+          [attr.stroke-dashoffset]="100 - renderedAge()"
+          transform="rotate(-90 32 32)"
+        />
+        <g class="expression">
+          <circle cx="25" cy="26" r="1.8" />
+          <circle cx="39" cy="26" r="1.8" />
+          <path class="mouth" [attr.d]="mouth()" />
+        </g>
+      </svg>
+    </div>
+  </div>
+  <div class="money" aria-hidden="true">
+    <svg class="coins" viewBox="0 0 32 40" fill="none" focusable="false">
+      <ellipse cx="16" cy="8" rx="11" ry="5" />
+      <path d="M 5 8 V 31 C 5 38 27 38 27 31 V 8" />
+      <path d="M 5 16 C 5 23 27 23 27 16 M 5 24 C 5 31 27 31 27 24" />
+    </svg>
+    <span class="money-amount">{{ formattedMoney() }}</span>
+  </div>
+</div>

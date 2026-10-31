@@ -175,16 +175,16 @@ export const CHAPTER_APPEARANCE = {
 } as const;
 
 export const CHAPTER_CLOSING_TEXTS = [
-  'Every beginning holds a thousand possibilities. Your story is waiting for its first adventure.',
-  'A name, a spark, a world to discover. The next chapter belongs to you and the choices you make.',
-  'Small steps can lead to extraordinary places. Take your time and make this journey your own.',
-  'No two lives follow the same road. Yours begins here, with room for surprises around every corner.',
-  'The future is not written in stone. Bring curiosity, courage, and a little kindness along the way.',
-  'This is only the starting point. There are friendships to find and unexpected paths to explore.',
-  'A whole lifetime stretches ahead. Gather little moments and see what kind of story they become.',
-  'Your beginnings are part of your story, not its ending. There is still so much for you to discover.',
-  'Some days will challenge you, others will surprise you. Keep moving toward your next possibility.',
-  'Here starts a life like no other. Make space for new adventures and the people you meet along the way.',
+  'Laughter is the shortest distance between two people.',
+  'Life has no limitations, except the ones you make.',
+  'Life is like riding a bicycle. To keep your balance, you must keep moving.',
+  'The only true wisdom is in knowing you know nothing.',
+  'You miss 100% of the shots you don`t take.',
+  'No one can make you feel inferior without your consent.',
+  'Life is like a box of chocolates. You never know what you`re gonna get.',
+  'Life isn`t about finding yourself. Life is about creating yourself.',
+  'Life is short. Smile at those who cry, ignore those who hurt you, and believe in yourself.',
+  'The happiest people don`t have the best of everything, they just make the best of everything.',
 ] as const;
 
 export const CHAPTER_PATH_TEXT = {

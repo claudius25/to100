@@ -2,6 +2,33 @@
 
 Minimalist life-journey game prototype (Angular 21 + plain Three.js).
 
+## Status bar UI playground
+
+Open **http://localhost:4200/dev/status-bar** after `npm start`. This isolated
+playground is also available in production and does not use or change the game engine.
+Adjust health, disposition, age, and money live, inspect four life-stage presets,
+and switch the preview background between light and dark.
+
+The standalone `StatusBarComponent` in `src/app/components/status-bar/` is
+presentation-only. Import it into a standalone component and bind:
+
+```html
+<app-status-bar [health]="80" [disposition]="4" [age]="50" [money]="1800000" />
+```
+
+Health and age are clamped to 0-100; non-finite values render as zero.
+Disposition is 1 (very sad), 2 (sad), 3 (neutral), or 4 (happy).
+Negative or non-finite money renders as zero; valid amounts are rounded and
+abbreviated to one decimal using `k`/`m`, including rounding across suffix boundaries.
+The face matches the health track's height, stays within its ends, and shares
+radius-aware positioning with the fill. The SVG age ring is independent.
+Changes animate over 400ms unless reduced motion is requested.
+The parent controls width by default. Optional `[width]` (total px) and `[height]`
+(health-track px) inputs let you tweak the aspect; padding, face and money text scale
+with the height. The playground has Width (0 = auto) and Height sliders.
+CSS custom properties such as `--status-bar-track-height`,
+`--status-bar-padding`, `--status-bar-duration`, and `--status-bar-purple` allow tuning.
+
 ## Play TO100
 
 Run `npm start` and open **http://localhost:4200/game**, or choose **Play TO100**
@@ -38,6 +65,12 @@ the origin remains in that browser history entry, but turns are not saved.
 The older `/starting-blueprint` tower remains a separate prototype.
 
 ### Full-viewport landscape layout
+
+`/blueprint-water`, `/chapter-2`, and `/game` share one persistent landscape/fullscreen
+layout (`src/app/landscape-viewport/game-viewport.ts`). Press **Play** once: moving
+between these pages keeps the same fullscreen element and orientation lock, without
+showing the launcher again. Home and development playgrounds stay outside this layout.
+Leaving the game layout or refreshing the page requires **Play** again.
 
 Both `/game` and `/blueprint-water` fill the available viewport, including after
 resizing or rotating the device. Controls and debugging panels overlay the scene;
@@ -183,7 +216,11 @@ the chapter. It remains usable during reveals and after the chapter is completed
 Uncheck **Key light enabled** or **Fill light enabled** to turn that light off
 without losing its position. Reset restores both enabled flags as well.
 
-**Begin life** passes the completed chapter to `/game`. As explicitly selected,
+**Begin life** opens `/chapter-2` (`src/app/chapter-two/`), which shows the hero's
+`StatusBarComponent` in the top-left corner, with dimensions configured by
+`CHAPTER_TWO_STATUS_BAR`. Mood maps to the face: 0-24 very sad, 25-49 sad,
+50-74 neutral, 75-100 happy. **Continue** passes the completed chapter on to `/game`.
+The chapter name is checked case-insensitively, because Chapter 1 shows it in capitals. As explicitly selected,
 levels 1/2/3/4 map to 25/50/75/100, with health blueprint mapped to
 `physicalResilience`. The game engine records Chapter 1 in `Hero.chapters`.
 Family finances do not grant personal money, and starting condition values remain 100. Traits still have no passive gameplay effects.

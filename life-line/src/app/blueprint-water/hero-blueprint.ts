@@ -21,7 +21,7 @@ export function readBlueprintChapter(state: unknown): WaterBlueprintResult | nul
   if (
     !isRecord(chapter) ||
     typeof chapter['name'] !== 'string' ||
-    !MALE_NAMES.includes(chapter['name']) ||
+    !MALE_NAMES.some((name) => name.toUpperCase() === String(chapter['name']).toUpperCase()) ||
     !isRecord(chapter['blueprint'])
   ) {
     throw new Error('Invalid starting blueprint chapter in navigation state.');

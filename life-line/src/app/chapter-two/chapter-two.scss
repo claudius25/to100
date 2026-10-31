@@ -1,0 +1,64 @@
+:host {
+  display: block;
+  height: 100%;
+  color: #363735;
+  font-family: 'Segoe UI', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.chapter {
+  position: relative;
+  height: 100%;
+  background: #eeede9;
+}
+
+.status {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  left: max(12px, env(safe-area-inset-left));
+}
+
+.intro {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  pointer-events: none;
+}
+
+.eyebrow {
+  margin: 0 0 0.4rem;
+  color: #6f716b;
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(1.6rem, 6vh, 2.6rem);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+}
+
+.footer {
+  position: absolute;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+.continue {
+  border: 1px solid #565950;
+  border-radius: 2rem;
+  padding: 0.7rem 1.5rem;
+  background: #eeede9cc;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.continue:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
