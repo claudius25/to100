@@ -1,0 +1,96 @@
+:host {
+  /* Every dimension and colour is derived from these three. */
+  --action-button-size: 38px;
+  --action-button-ink: #e8e8e8;
+  --action-button-tint: 108 112 120;
+  display: inline-block;
+  line-height: 0;
+}
+
+.action-button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--action-button-size);
+  height: var(--action-button-size);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  /* Smoked glass: the disc tints whatever it covers rather than lighting it. */
+  background: rgb(var(--action-button-tint) / 27%);
+  color: var(--action-button-ink);
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(7px);
+  backdrop-filter: blur(7px);
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.action-button:active:not(:disabled) {
+  transform: translateY(1px) scale(0.965);
+  background: rgb(var(--action-button-tint) / 23.8%);
+  box-shadow:
+    inset 4px 5px 16px rgb(12 15 20 / 29.6%),
+    inset -4px -5px 15px rgb(255 255 255 / 16.1%);
+}
+
+/* Held down, two blurred lobes read as the dish dipping away from the light. */
+.action-button:active:not(:disabled)::before,
+.action-button:active:not(:disabled)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  filter: blur(6px);
+  pointer-events: none;
+}
+
+.action-button:active:not(:disabled)::before {
+  background: radial-gradient(ellipse at 76% 78%, rgb(255 255 255 / 23%), transparent 65%);
+}
+
+.action-button:active:not(:disabled)::after {
+  background: radial-gradient(ellipse at 22% 20%, rgb(20 22 28 / 37%), transparent 65%);
+}
+
+.action-button:focus-visible {
+  outline: 2px solid var(--action-button-ink);
+  outline-offset: 3px;
+}
+
+.action-button:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.glyph {
+  /* Lifted above the pressed-state lobes, which are painted by ::after. */
+  position: relative;
+  width: 36%;
+  height: 36%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  /* The play triangle sits optically centred rather than geometrically. */
+  overflow: visible;
+}
+
+.glyph .solid {
+  fill: currentColor;
+  stroke: currentColor;
+  stroke-width: 1.4;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .action-button {
+    transition: none;
+  }
+
+  .action-button:active:not(:disabled) {
+    transform: none;
+  }
+}

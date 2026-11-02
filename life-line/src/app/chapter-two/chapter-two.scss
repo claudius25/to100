@@ -230,3 +230,8 @@ button:disabled {
   color: #663a24;
   font-size: 0.75rem;
 }
+
+/* The glass disc is drawn for dark artwork; over the chapter's paper it needs dark ink. */
+.continue {
+  --action-button-ink: #2f312c;
+}

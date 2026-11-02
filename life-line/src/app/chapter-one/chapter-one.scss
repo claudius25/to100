@@ -122,6 +122,11 @@ footer p {
 .begin {
   animation: chapter-appear var(--appearance-duration) ease-in-out both;
 }
+/* The glass disc is drawn for dark artwork; over the chapter's paper it needs dark ink. */
+.begin,
+.reset {
+  --action-button-ink: #2f312c;
+}
 @keyframes chapter-appear {
   from {
     opacity: 0;

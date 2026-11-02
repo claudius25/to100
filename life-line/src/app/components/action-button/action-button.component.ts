@@ -21,7 +21,7 @@ function positivePx(value: number | null): string | null {
 @Component({
   selector: 'app-action-button',
   templateUrl: './action-button.component.html',
-  styleUrl: './action-button.component.scss',
+  styleUrl: './action-button.component.glass.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '[style.--action-button-size]': 'sizeStyle()' },
 })
