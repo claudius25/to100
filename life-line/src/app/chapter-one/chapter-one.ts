@@ -15,6 +15,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { Router } from '@angular/router';
+import { ActionButtonComponent } from '../components/action-button/action-button.component';
 import { LifeSaveStore } from '../life-save';
 import type { RandomSource } from '../starting-blueprint/model/starting-blueprint';
 import {
@@ -46,7 +47,7 @@ type LightToggle = 'keyEnabled' | 'edgeEnabled' | 'ambientEnabled' | 'giEnabled'
 
 @Component({
   selector: 'app-chapter-one',
-  imports: [JsonPipe, DecimalPipe],
+  imports: [JsonPipe, DecimalPipe, ActionButtonComponent],
   templateUrl: './chapter-one.html',
   styleUrl: './chapter-one.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

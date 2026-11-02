@@ -11,6 +11,10 @@ import {
   output,
   signal,
 } from '@angular/core';
+import {
+  ActionButtonComponent,
+  type ActionButtonIcon,
+} from '../components/action-button/action-button.component';
 
 type LandscapeOrientation = ScreenOrientation & {
   lock?: (orientation: 'landscape') => Promise<void>;
@@ -18,6 +22,7 @@ type LandscapeOrientation = ScreenOrientation & {
 
 @Component({
   selector: 'app-landscape-viewport',
+  imports: [ActionButtonComponent],
   templateUrl: './landscape-viewport.html',
   styleUrl: './landscape-viewport.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -44,6 +49,16 @@ export class LandscapeViewport {
   protected readonly fullscreenNotice = signal('');
   readonly contentActive = computed(
     () => !this.menu() && !this.portraitBlocked() && this.launched(),
+  );
+  /** A saved life turns the primary control into "start over" rather than "play". */
+  private readonly replacesSavedLife = computed(
+    () => this.menu() && (this.hasSavedLife() || !!this.saveError()),
+  );
+  protected readonly primaryIcon = computed<ActionButtonIcon>(() =>
+    this.replacesSavedLife() ? 'restart' : 'play',
+  );
+  protected readonly primaryLabel = computed(() =>
+    this.replacesSavedLife() ? 'New life' : 'Play',
   );
 
   constructor() {

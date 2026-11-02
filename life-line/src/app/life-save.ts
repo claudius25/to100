@@ -86,7 +86,7 @@ export class LifeSaveStore {
       if (text !== null) this.current.set(readLifeSave(JSON.parse(text)));
     } catch (error) {
       console.error('Could not load the saved TO100 life.', error);
-      this.error.set('Your saved life could not be loaded. NEW LIFE will replace it.');
+      this.error.set('Your saved life could not be loaded. New life will replace it.');
     }
   }
 

@@ -1,0 +1,101 @@
+<main class="playground" [class.playground--dark]="darkBackground()">
+  <div class="content">
+    <header>
+      <div>
+        <p class="eyebrow">TO100 / UI playground</p>
+        <h1>Action button</h1>
+        <p class="intro">Restart, play and next, over the launcher artwork they live on.</p>
+      </div>
+      <button
+        type="button"
+        class="background-toggle"
+        [attr.aria-pressed]="darkBackground()"
+        (click)="darkBackground.set(!darkBackground())"
+      >
+        {{ darkBackground() ? 'Light background' : 'Dark background' }}
+      </button>
+    </header>
+
+    <section class="preview" aria-label="Action buttons over the launcher artwork">
+      <div class="poster">
+        <img class="poster-art" src="assets/launcher.png" alt="TO100 launcher artwork" />
+        <div class="poster-actions" [style.gap.px]="gap()">
+          @for (icon of icons; track icon) {
+            <app-action-button
+              [icon]="icon"
+              [size]="size()"
+              [disabled]="disabled()"
+              (pressed)="press($event)"
+            />
+          }
+        </div>
+      </div>
+      <p class="pressed" role="status">Last press: {{ lastPressedLabel() }}</p>
+    </section>
+
+    <section class="controls" aria-labelledby="controls-title">
+      <h2 id="controls-title">Size and spacing</h2>
+      <div class="control-grid">
+        <div class="control">
+          <label for="size"
+            >Diameter <output for="size">{{ size() }}px</output></label
+          >
+          <input
+            id="size"
+            type="range"
+            min="32"
+            max="112"
+            step="1"
+            [value]="size()"
+            (input)="update('size', $event)"
+          />
+        </div>
+        <div class="control">
+          <label for="gap"
+            >Gap <output for="gap">{{ gap() }}px</output></label
+          >
+          <input
+            id="gap"
+            type="range"
+            min="0"
+            max="48"
+            step="1"
+            [value]="gap()"
+            (input)="update('gap', $event)"
+          />
+        </div>
+        <div class="control">
+          <button
+            id="disabled-toggle"
+            type="button"
+            class="background-toggle"
+            [attr.aria-pressed]="disabled()"
+            (click)="disabled.set(!disabled())"
+          >
+            {{ disabled() ? 'Enable the buttons' : 'Disable the buttons' }}
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="examples" aria-labelledby="examples-title">
+      <h2 id="examples-title">Each glyph on its own</h2>
+      <div class="example-grid">
+        @for (icon of icons; track icon) {
+          <article class="example">
+            <h3>{{ labels[icon] }}</h3>
+            <div class="swatch swatch--dark">
+              <app-action-button [icon]="icon" [size]="size()" (pressed)="press($event)" />
+            </div>
+            <div class="swatch swatch--light">
+              <app-action-button [icon]="icon" [size]="size()" (pressed)="press($event)" />
+            </div>
+            <p>
+              <code>icon="{{ icon }}"</code>
+            </p>
+          </article>
+        }
+      </div>
+    </section>
+  </div>
+</main>

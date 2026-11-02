@@ -101,9 +101,13 @@
       <p class="notice" role="alert">{{ navigationError() }}</p>
     }
     @if (canContinue()) {
-      <button class="continue" type="button" [disabled]="navigating()" (click)="continueToGame()">
-        Continue
-      </button>
+      <app-action-button
+        class="continue"
+        icon="next"
+        label="Continue"
+        [disabled]="navigating()"
+        (pressed)="continueToGame()"
+      />
     }
   </footer>
 </main>

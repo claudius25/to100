@@ -48,31 +48,13 @@
   left: max(10px, env(safe-area-inset-left));
   display: flex;
   justify-content: flex-end;
+  align-items: center;
   flex-wrap: wrap;
   gap: 12px;
 }
 
-.fullscreen-toggle,
-.fullscreen-notice {
-  z-index: 5;
-  color: #363735;
-  background: #eeede9ee;
-  border: 1px solid #96958e;
-}
-
 .fullscreen-toggle {
-  min-height: 48px;
-  border-radius: 2rem;
-  padding: 0.75rem 2.5rem;
-  font:
-    1.1rem 'Segoe UI',
-    sans-serif;
-  cursor: pointer;
-}
-
-.fullscreen-toggle:disabled {
-  opacity: 0.5;
-  cursor: default;
+  z-index: 5;
 }
 
 .fullscreen-notice {
@@ -85,6 +67,9 @@
   max-width: calc(100% - 2rem);
   margin: 0 auto;
   padding: 0.6rem 0.8rem;
+  border: 1px solid #96958e;
+  background: #eeede9ee;
+  color: #363735;
   font-size: 0.8rem;
   pointer-events: none;
 }

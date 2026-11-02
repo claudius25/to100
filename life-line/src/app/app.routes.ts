@@ -56,6 +56,14 @@ export const routes: Routes = [
         (m) => m.StatusBarPlaygroundComponent,
       ),
   },
+  {
+    path: 'dev/action-button',
+    title: 'TO100 - Action Button Playground',
+    loadComponent: () =>
+      import('./pages/action-button-playground/action-button-playground.component').then(
+        (m) => m.ActionButtonPlaygroundComponent,
+      ),
+  },
   ...(isDevMode()
     ? [
         {

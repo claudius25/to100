@@ -15,7 +15,7 @@ describe('Shared game viewport', () => {
     await harness.fixture.whenStable();
     const viewport = harness.routeNativeElement!.querySelector('app-landscape-viewport')!;
     expect(viewport.querySelector('app-chapter-one')).not.toBeNull();
-    viewport.querySelector<HTMLButtonElement>('.fullscreen-toggle')!.click();
+    viewport.querySelector<HTMLButtonElement>('.fullscreen-toggle button')!.click();
     await harness.fixture.whenStable();
     expect(viewport.querySelector('.rotate-prompt')).toBeNull();
 
@@ -45,15 +45,20 @@ describe('Shared game viewport', () => {
     const harness = await RouterTestingHarness.create('/');
     await harness.fixture.whenStable();
     const viewport = harness.routeNativeElement!.querySelector('app-landscape-viewport')!;
-    const start = () => viewport.querySelector<HTMLButtonElement>('.fullscreen-toggle')!.click();
+    const start = () =>
+      viewport.querySelector<HTMLButtonElement>('.fullscreen-toggle button')!.click();
     start();
     await harness.fixture.whenStable();
     expect(TestBed.inject(Router).url).toBe('/chapter-1');
     const store = TestBed.inject(LifeSaveStore);
     store.write({ version: 1, route: '/chapter-2', origin: null });
     await harness.navigateByUrl('/');
-    expect(viewport.querySelector('.fullscreen-toggle')!.textContent).toContain('NEW LIFE');
-    expect(viewport.querySelector<HTMLButtonElement>('.continue-life')!.disabled).toBe(false);
+    expect(viewport.querySelector('.fullscreen-toggle button')!.getAttribute('aria-label')).toBe(
+      'New life',
+    );
+    expect(viewport.querySelector<HTMLButtonElement>('.continue-life button')!.disabled).toBe(
+      false,
+    );
     start();
     await harness.fixture.whenStable();
     expect(TestBed.inject(Router).url).toBe('/chapter-1');
@@ -73,7 +78,7 @@ describe('Shared game viewport', () => {
     });
     const harness = await RouterTestingHarness.create('/game');
     expect(TestBed.inject(Router).url).toBe('/');
-    harness.routeNativeElement!.querySelector<HTMLButtonElement>('.continue-life')!.click();
+    harness.routeNativeElement!.querySelector<HTMLButtonElement>('.continue-life button')!.click();
     await harness.fixture.whenStable();
     expect(TestBed.inject(Router).url).toBe('/chapter-1');
     expect(store.savedLife()?.route).toBe('/chapter-1');

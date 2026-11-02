@@ -115,15 +115,11 @@ footer {
   z-index: 2;
   pointer-events: none;
 }
-footer button,
+footer app-action-button,
 footer p {
   pointer-events: auto;
 }
 .begin {
-  border: 1px solid #565950;
-  border-radius: 2rem;
-  padding: 0.7rem 1.5rem;
-  background: #eeede9cc;
   animation: chapter-appear var(--appearance-duration) ease-in-out both;
 }
 @keyframes chapter-appear {

@@ -140,7 +140,7 @@ export const CHAPTER_TEXT = {
   nameLabel: 'NAME',
   valueSeparator: '. ',
   restart: 'Start over',
-  begin: 'Begin life →',
+  begin: 'Begin life',
   debug: 'Chapter 1 · current state JSON',
   loading: 'Preparing your chapter…',
   animating: 'Let it settle…',

@@ -58,9 +58,13 @@
 
   <footer>
     @if (result()) {
-      <button class="begin" type="button" [disabled]="navigating()" (click)="beginLife()">
-        {{ text.begin }}
-      </button>
+      <app-action-button
+        class="begin"
+        icon="next"
+        [label]="text.begin"
+        [disabled]="navigating()"
+        (pressed)="beginLife()"
+      />
     }
     @if (navigationError()) {
       <p role="alert">{{ navigationError() }}</p>
@@ -138,14 +142,13 @@
     <summary>Dev: camera &amp; lights</summary>
     <p>Changes are live. Copy the settings below into CHAPTER_VIEW to keep them.</p>
     <p>Zoom is capped automatically to keep every chapter row in view.</p>
-    <button
+    <app-action-button
       class="reset"
-      type="button"
-      (click)="restart()"
+      icon="restart"
+      [label]="text.restart"
       [disabled]="mode() === 'loading' || navigating()"
-    >
-      {{ text.restart }}
-    </button>
+      (pressed)="restart()"
+    />
     @if (mode() !== 'webgl') {
       <p role="status">Camera and lights require the 3D renderer; the 2D preview is unchanged.</p>
     }

@@ -80,7 +80,7 @@ describe('ChapterTwoPage', () => {
     );
 
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
-    root.querySelector<HTMLButtonElement>('.continue')!.click();
+    root.querySelector<HTMLButtonElement>('.continue button')!.click();
     await harness.fixture.whenStable();
     expect(navigate).toHaveBeenCalledWith('/game', {
       replaceUrl: true,

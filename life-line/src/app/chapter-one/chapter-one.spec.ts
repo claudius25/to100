@@ -142,7 +142,7 @@ describe('ChapterOnePage', () => {
     const scene = root.querySelector<HTMLButtonElement>('.scene')!;
     scene.click();
     await new Promise((resolve) => setTimeout(resolve, 30));
-    root.querySelector<HTMLButtonElement>('.reset')!.click();
+    root.querySelector<HTMLButtonElement>('.reset button')!.click();
     await new Promise((resolve) => setTimeout(resolve, 130));
     await fixture.whenStable();
     expect(root.querySelectorAll('.preview__row')).toHaveLength(0);
@@ -226,7 +226,7 @@ describe('ChapterOnePage', () => {
     expect(completed).toHaveBeenCalledTimes(1);
     const router = TestBed.inject(Router);
     const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
-    root.querySelector<HTMLButtonElement>('.begin')!.click();
+    root.querySelector<HTMLButtonElement>('.begin button')!.click();
     await fixture.whenStable();
     expect(navigate).toHaveBeenCalledWith('/chapter-2', {
       replaceUrl: true,
@@ -250,7 +250,7 @@ describe('ChapterOnePage', () => {
     const completed = vi.fn();
     fixture.componentInstance.blueprintCompleted.subscribe(completed);
     root.querySelector<HTMLButtonElement>('.scene')!.click();
-    root.querySelector<HTMLButtonElement>('.reset')!.click();
+    root.querySelector<HTMLButtonElement>('.reset button')!.click();
     await waitReady(fixture);
     expect(root.querySelectorAll('.preview__row')).toHaveLength(0);
     expect(root.querySelector('.scene')?.getAttribute('aria-label')).toBe(CHAPTER_TEXT.hints[0]);

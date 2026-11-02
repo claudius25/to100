@@ -66,9 +66,11 @@ describe('GamePage', () => {
   it('shows the launcher at home and is reachable at /game', async () => {
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl('/');
-    expect(harness.routeNativeElement?.querySelector('.fullscreen-toggle')?.textContent).toContain(
-      'Play',
-    );
+    expect(
+      harness.routeNativeElement
+        ?.querySelector('.fullscreen-toggle button')
+        ?.getAttribute('aria-label'),
+    ).toBe('Play');
     await harness.navigateByUrl('/game');
     expect(harness.routeNativeElement?.textContent).toContain('TO100');
     const details = harness.routeNativeElement!.querySelector<HTMLDetailsElement>('.game-details')!;
@@ -85,7 +87,9 @@ describe('GamePage', () => {
     const roll = vi.spyOn(GameEngine.prototype, 'rollTurn');
     const harness = await RouterTestingHarness.create('/game');
     await harness.fixture.whenStable();
-    harness.routeNativeElement!.querySelector<HTMLButtonElement>('.fullscreen-toggle')!.click();
+    harness
+      .routeNativeElement!.querySelector<HTMLButtonElement>('.fullscreen-toggle button')!
+      .click();
     await harness.fixture.whenStable();
     harness.routeNativeElement!.querySelector<HTMLButtonElement>('.roll-button')!.click();
     await harness.fixture.whenStable();
@@ -93,7 +97,7 @@ describe('GamePage', () => {
     if (saved?.route !== '/game') throw new Error('Expected a saved game.');
     expect(saved.pendingEncounter).toBe(true);
     await harness.navigateByUrl('/');
-    harness.routeNativeElement!.querySelector<HTMLButtonElement>('.continue-life')!.click();
+    harness.routeNativeElement!.querySelector<HTMLButtonElement>('.continue-life button')!.click();
     await harness.fixture.whenStable();
     const root = harness.routeNativeElement!;
     const dialog = root.querySelector<HTMLDialogElement>('dialog')!;
@@ -106,7 +110,7 @@ describe('GamePage', () => {
     dialog.querySelector<HTMLButtonElement>('button')!.click();
     await harness.fixture.whenStable();
     await harness.navigateByUrl('/');
-    harness.routeNativeElement!.querySelector<HTMLButtonElement>('.continue-life')!.click();
+    harness.routeNativeElement!.querySelector<HTMLButtonElement>('.continue-life button')!.click();
     await harness.fixture.whenStable();
     expect(harness.routeNativeElement!.querySelector<HTMLDialogElement>('dialog')!.open).toBe(
       false,
@@ -123,7 +127,7 @@ describe('GamePage', () => {
     const harness = await RouterTestingHarness.create('/game');
     const fixture = harness.fixture;
     await fixture.whenStable();
-    fixture.nativeElement.querySelector('.fullscreen-toggle').click();
+    fixture.nativeElement.querySelector('.fullscreen-toggle button').click();
     await fixture.whenStable();
     const element = fixture.nativeElement as HTMLElement;
     const readState = () => {

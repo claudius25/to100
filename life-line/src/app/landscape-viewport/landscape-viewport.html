@@ -9,23 +9,21 @@
   <section class="rotate-prompt" aria-label="TO100 launcher">
     <img class="launcher-image" src="assets/launcher.png" alt="TO100" />
     <div class="launcher-actions">
-      <button
-        type="button"
+      <app-action-button
         class="fullscreen-toggle"
+        [icon]="primaryIcon()"
+        [label]="primaryLabel()"
         [disabled]="requestingFullscreen() || busy()"
-        (click)="play()"
-      >
-        {{ menu() && (hasSavedLife() || saveError()) ? 'NEW LIFE' : 'Play' }}
-      </button>
+        (pressed)="play()"
+      />
       @if (menu() && hasSavedLife()) {
-        <button
-          type="button"
+        <app-action-button
           class="fullscreen-toggle continue-life"
+          icon="next"
+          label="Continue"
           [disabled]="requestingFullscreen() || busy()"
-          (click)="play('continue')"
-        >
-          Continue
-        </button>
+          (pressed)="play('continue')"
+        />
       }
     </div>
     @if (portraitBlocked()) {

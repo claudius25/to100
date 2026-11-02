@@ -42,7 +42,7 @@ describe('LandscapeViewport', () => {
     fixture.componentRef.setInput('hasSavedLife', true);
     await fixture.whenStable();
     const continueButton = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>(
-      '.continue-life',
+      '.continue-life button',
     )!;
     expect(continueButton.disabled).toBe(false);
 
@@ -60,7 +60,7 @@ describe('LandscapeViewport', () => {
     expect(fixture.nativeElement.querySelector('.launcher-image').getAttribute('src')).toBe(
       'assets/launcher.png',
     );
-    fixture.nativeElement.querySelector('.fullscreen-toggle').click();
+    fixture.nativeElement.querySelector('.fullscreen-toggle button').click();
     await fixture.whenStable();
     expect(content.inert).toBe(true);
 
@@ -78,7 +78,7 @@ describe('LandscapeViewport', () => {
     Object.defineProperty(fixture.nativeElement, 'requestFullscreen', { value: undefined });
     await fixture.whenStable();
     expect(fixture.nativeElement.querySelector('.viewport-content').inert).toBe(true);
-    fixture.nativeElement.querySelector('.fullscreen-toggle').click();
+    fixture.nativeElement.querySelector('.fullscreen-toggle button').click();
     await fixture.whenStable();
     expect(fixture.nativeElement.querySelector('.fullscreen-toggle')).toBeNull();
     expect(fixture.nativeElement.querySelector('.viewport-content').inert).toBe(false);

@@ -14,6 +14,7 @@ import {
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { readBlueprintChapter, toHeroStartingState } from '../chapter-one/hero-blueprint';
+import { ActionButtonComponent } from '../components/action-button/action-button.component';
 import { Disposition, StatusBarComponent } from '../components/status-bar/status-bar.component';
 import { GameEngine } from '../simulation/model/game-engine';
 import { LifeSaveStore } from '../life-save';
@@ -38,7 +39,7 @@ export function moodToDisposition(mood: number): Disposition {
 
 @Component({
   selector: 'app-chapter-two',
-  imports: [StatusBarComponent],
+  imports: [StatusBarComponent, ActionButtonComponent],
   templateUrl: './chapter-two.html',
   styleUrl: './chapter-two.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
